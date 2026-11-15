@@ -11,6 +11,7 @@ from core.social_graph import format_opinions_for_prompt
 from core.player import format_player_for_prompt, get_player, save_player, player_label
 from core.traits import format_observed_traits, observe_trait
 from core.promises import format_pending_promises, maybe_track_from_turn
+from core.clock import format_clock, format_clock_for_prompt
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -213,6 +214,7 @@ with col_info:
 
 with col_chat:
     st.markdown(f"## Talking to {npc['emoji']} {npc['name']}")
+    st.caption(format_clock())
     render_consequences()
     st.divider()
 
@@ -280,6 +282,7 @@ with col_chat:
             player_text=format_player_for_prompt(),
             traits_text=format_observed_traits(npc_id),
             promises_text=format_pending_promises(npc_id),
+            clock_text=format_clock_for_prompt(),
         )
 
         with st.chat_message("assistant", avatar=npc["emoji"]):

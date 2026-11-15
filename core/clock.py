@@ -72,13 +72,17 @@ def ticks_until_next_morning() -> int:
     return len(PERIODS) - period_index
 
 
+def advance_period() -> list[dict]:
+    """One period passes. Single time source: advance_and_resolve."""
+    from core.gossip_engine import advance_and_resolve
+    return advance_and_resolve()
+
+
 def skip_day() -> list[dict]:
     """Advance to the next weekday morning, resolving gossip and promises along the way."""
-    from core.gossip_engine import advance_and_resolve
-
     delivered = []
     for _ in range(ticks_until_next_morning()):
-        delivered.extend(advance_and_resolve())
+        delivered.extend(advance_period())
     return delivered
 
 

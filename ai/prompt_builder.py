@@ -37,6 +37,9 @@ Total Past Interactions: {interactions_count}
 === HOW YOU FEEL ABOUT OTHER PEOPLE ON CAMPUS ===
 {opinions_text}
 
+=== CURRENT TIME ===
+{clock_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -112,6 +115,7 @@ def build_prompt(
     player_text: str = "This student has not given you a name yet.",
     traits_text: str = "You have not yet formed a distinct impression of this student.",
     promises_text: str = "This student has no open promises with you.",
+    clock_text: str = "It is Thursday afternoon, week 6 of the semester.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -139,6 +143,7 @@ def build_prompt(
         gossip_text=gossip_text,
         opinions_text=opinions_text,
         context_text=format_context(rag_context),
+        clock_text=clock_text,
         history_text=_format_history(chat_history, npc["name"]),
         user_message=user_message
     )
@@ -176,6 +181,9 @@ Hostility: {hostility}/100 | Respect: {respect}/100
 === HOW YOU FEEL ABOUT OTHER PEOPLE ON CAMPUS ===
 {opinions_text}
 
+=== CURRENT TIME ===
+{clock_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -209,6 +217,7 @@ def build_opening_prompt(
     opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
     player_text: str = "This student has not given you a name yet.",
     traits_text: str = "You have not yet formed a distinct impression of this student.",
+    clock_text: str = "It is Thursday afternoon, week 6 of the semester.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -233,5 +242,6 @@ def build_opening_prompt(
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
         opinions_text=opinions_text,
-        context_text=format_context(rag_context)
+        context_text=format_context(rag_context),
+        clock_text=clock_text,
     )
