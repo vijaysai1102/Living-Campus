@@ -9,6 +9,7 @@ from core.fact_extractor import ingest_shareable_facts
 from core.gossip_engine import advance_and_resolve, format_heard_around_campus, queue_new_gossip
 from core.social_graph import format_opinions_for_prompt
 from core.player import format_player_for_prompt, get_player, save_player, player_label
+from core.traits import format_observed_traits, observe_trait
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -264,6 +265,7 @@ with col_chat:
             gossip_text=gossip_text,
             opinions_text=opinions_text,
             player_text=format_player_for_prompt(),
+            traits_text=format_observed_traits(npc_id),
         )
 
         with st.chat_message("assistant", avatar=npc["emoji"]):
@@ -302,6 +304,8 @@ with col_chat:
                 tags=result.get("memory_tags", "") or "",
                 kind=result.get("memory_kind", "fact"),
             )
+
+        observe_trait(npc_id, result.get("observed_trait", ""))
 
         ingest_shareable_facts(npc_id, result)
         queue_new_gossip()

@@ -107,6 +107,7 @@ def _parse_response(raw: str) -> dict:
         "shareable_facts": [],
         "keep_secret": False,
         "fact_sensitivity": 40,
+        "observed_trait": "",
     }
     try:
         data = json.loads(cleaned)
@@ -126,6 +127,7 @@ def _parse_response(raw: str) -> dict:
             "shareable_facts": _normalize_shareable_facts(data.get("shareable_facts", [])),
             "keep_secret": _parse_bool(data.get("keep_secret", False)),
             "fact_sensitivity": sensitivity,
+            "observed_trait": str(data.get("observed_trait") or "").strip(),
         }
     except (json.JSONDecodeError, ValueError):
         return empty

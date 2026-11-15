@@ -17,6 +17,9 @@ Stressed: {stressed}/100 | Excited: {excited}/100 | Annoyed: {annoyed}/100
 === THE STUDENT ===
 {player_text}
 
+=== HOW YOU CURRENTLY SEE THIS STUDENT ===
+{traits_text}
+
 === YOUR RELATIONSHIP WITH THIS STUDENT ===
 Trust: {trust}/100 | Friendship: {friendship}/100
 Hostility: {hostility}/100 | Respect: {respect}/100
@@ -46,6 +49,7 @@ Total Past Interactions: {interactions_count}
 - Keep responses 2-5 sentences unless the topic truly needs more
 - NEVER mention you are an AI or break the fourth wall
 - Use the student's name when it feels natural. Do not overuse it.
+- HOW YOU CURRENTLY SEE THIS STUDENT is your private impression. Let it color tone. You may add one new observed_trait adjective this turn if they revealed something, otherwise leave it empty. Webb and Batman can disagree.
 - Update relationship_delta when this exchange actually changes how you feel about the student:
   insults/lies raise hostility and lower trust; genuine effort raises respect; warmth and reliability raise friendship and trust. Leave axes at 0 if nothing meaningful changed.
 - Extract shareable_facts only for things another person on campus might later hear: confessions, lies, academic dishonesty, insults about other NPCs, promises, personal secrets. Small talk gets an empty list.
@@ -69,12 +73,14 @@ Respond ONLY with valid JSON. No markdown fences. No // comments. No + signs bef
   "memory_tags": "",
   "shareable_facts": [],
   "keep_secret": false,
-  "fact_sensitivity": 40
+  "fact_sensitivity": 40,
+  "observed_trait": ""
 }}
 Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change.
 Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change.
 shareable_facts: 0 to 2 short third-person sentences. keep_secret: true/false. fact_sensitivity: 0-100, higher means more dangerous if leaked.
-memory_kind: one of fact, promise, secret, grievance, favor. memory_importance: 1-10. Empty memory_note if nothing is worth keeping."""
+memory_kind: one of fact, promise, secret, grievance, favor. memory_importance: 1-10. Empty memory_note if nothing is worth keeping.
+observed_trait: optional single lowercase adjective (diligent, untrustworthy, chaotic) or empty string. Do not repeat traits you already listed."""
 
 
 def _format_history(history: list[dict], npc_name: str) -> str:
@@ -98,6 +104,7 @@ def build_prompt(
     gossip_text: str = "You have not heard any campus gossip about this student recently.",
     opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
     player_text: str = "This student has not given you a name yet.",
+    traits_text: str = "You have not yet formed a distinct impression of this student.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -119,6 +126,7 @@ def build_prompt(
         respect=relationship.get("respect", 30),
         interactions_count=relationship.get("interactions_count", 0),
         player_text=player_text,
+        traits_text=traits_text,
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
         opinions_text=opinions_text,
@@ -143,6 +151,9 @@ Stressed: {stressed}/100 | Excited: {excited}/100 | Annoyed: {annoyed}/100
 
 === THE STUDENT ===
 {player_text}
+
+=== HOW YOU CURRENTLY SEE THIS STUDENT ===
+{traits_text}
 
 === YOUR RELATIONSHIP WITH THIS STUDENT ===
 Trust: {trust}/100 | Friendship: {friendship}/100
@@ -189,6 +200,7 @@ def build_opening_prompt(
     gossip_text: str = "You have not heard any campus gossip about this student recently.",
     opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
     player_text: str = "This student has not given you a name yet.",
+    traits_text: str = "You have not yet formed a distinct impression of this student.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -209,6 +221,7 @@ def build_opening_prompt(
         hostility=relationship.get("hostility", 0),
         respect=relationship.get("respect", 30),
         player_text=player_text,
+        traits_text=traits_text,
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
         opinions_text=opinions_text,

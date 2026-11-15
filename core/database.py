@@ -140,6 +140,13 @@ def init_db():
 
         INSERT OR IGNORE INTO players (id, display_name, year, introduced)
         VALUES (1, 'Student', 'junior', 0);
+
+        CREATE TABLE IF NOT EXISTS player_traits_observed (
+            npc_id      TEXT NOT NULL,
+            trait       TEXT NOT NULL,
+            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(npc_id, trait)
+        );
     """)
 
     # Seed default emotion and relationship rows for each NPC
