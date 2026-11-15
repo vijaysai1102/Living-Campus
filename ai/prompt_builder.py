@@ -43,6 +43,9 @@ Total Past Interactions: {interactions_count}
 === WHERE YOU ARE ===
 {location_text}
 
+=== STORY HOOKS ===
+{hooks_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -85,14 +88,16 @@ Respond ONLY with valid JSON. No markdown fences. No // comments. No + signs bef
   "keep_secret": false,
   "fact_sensitivity": 40,
   "observed_trait": "",
-  "promise_status": ""
+  "promise_status": "",
+  "favor_update": ""
 }}
 Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change.
 Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change.
 shareable_facts: 0 to 2 short third-person sentences. keep_secret: true/false. fact_sensitivity: 0-100, higher means more dangerous if leaked.
 memory_kind: one of fact, promise, secret, grievance, favor. memory_importance: 1-10. Empty memory_note if nothing is worth keeping.
 observed_trait: optional single lowercase adjective (diligent, untrustworthy, chaotic) or empty string. Do not repeat traits you already listed.
-promise_status: empty string, "kept", or "broken" for an existing open promise. Do not set kept just because they made a new promise."""
+promise_status: empty string, "kept", or "broken" for an existing open promise. Do not set kept just because they made a new promise.
+favor_update: empty, "succeeded", or "failed" for an authored FAVOR HOOK only."""
 
 
 def _format_history(history: list[dict], npc_name: str) -> str:
@@ -120,6 +125,7 @@ def build_prompt(
     promises_text: str = "This student has no open promises with you.",
     clock_text: str = "It is Thursday afternoon, week 6 of the semester.",
     location_text: str = "You are somewhere on campus.",
+    hooks_text: str = "No authored hook this turn. Do not invent a new quest.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -149,6 +155,7 @@ def build_prompt(
         context_text=format_context(rag_context),
         clock_text=clock_text,
         location_text=location_text,
+        hooks_text=hooks_text,
         history_text=_format_history(chat_history, npc["name"]),
         user_message=user_message
     )

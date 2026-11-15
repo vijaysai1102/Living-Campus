@@ -13,7 +13,7 @@ from core.traits import format_observed_traits, observe_trait
 from core.promises import format_pending_promises, maybe_track_from_turn
 from core.clock import format_clock, format_clock_for_prompt
 from core.schedules import format_location_for_prompt, is_interruptible, unavailable_line
-from core.story_engine import consider_discovery
+from core.story_engine import consider_discovery, format_favor_hooks, resolve_favors
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -298,6 +298,7 @@ with col_chat:
             promises_text=format_pending_promises(npc_id),
             clock_text=format_clock_for_prompt(),
             location_text=format_location_for_prompt(npc_id),
+            hooks_text=format_favor_hooks(npc_id) or "No authored hook this turn. Do not invent a new quest.",
         )
 
         with st.chat_message("assistant", avatar=npc["emoji"]):
@@ -341,6 +342,7 @@ with col_chat:
         maybe_track_from_turn(npc_id, result, memory_id)
         observe_trait(npc_id, result.get("observed_trait", ""))
         consider_discovery(npc_id, result)
+        resolve_favors(npc_id, {**result, "user_message": user_input})
 
         ingest_shareable_facts(npc_id, result)
         queued = queue_new_gossip()

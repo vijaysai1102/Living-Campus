@@ -3,7 +3,7 @@
 import json
 from functools import lru_cache
 
-from config.settings import SECRETS_PATH
+from config.settings import FAVORS_PATH, SECRETS_PATH
 from core.database import get_connection
 from core.memory_manager import save_memory
 from core.relationship_engine import get_relationship, update_relationship
@@ -157,4 +157,157 @@ def _apply_leak(secret: dict) -> None:
         importance=9,
         tags=f"{secret.get('id')},leaked",
         kind="secret",
+    )
+
+
+FAVOR_STATES = ("locked", "available", "asked", "succeeded", "failed")
+
+
+@lru_cache(maxsize=1)
+def load_favors() -> list[dict]:
+    if not FAVORS_PATH.exists():
+        return []
+    with open(FAVORS_PATH, "r", encoding="utf-8") as f:
+        return list(json.load(f).get("favors", []))
+
+
+def get_favor_status(favor_id: str) -> str:
+    conn = get_connection()
+    row = conn.execute("SELECT status FROM favor_status WHERE favor_id = ?", (favor_id,)).fetchone()
+    conn.close()
+    return row["status"] if row else "locked"
+
+
+def set_favor_status(favor_id: str, status: str, asked_tick: int | None = None) -> None:
+    from core.gossip_engine import get_tick
+
+    tick = asked_tick if asked_tick is not None else get_tick()
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO favor_status (favor_id, status, asked_tick)
+        VALUES (?, ?, ?)
+        ON CONFLICT(favor_id) DO UPDATE SET
+            status = excluded.status,
+            asked_tick = COALESCE(excluded.asked_tick, favor_status.asked_tick),
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (favor_id, status, tick),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_favors() -> None:
+    conn = get_connection()
+    conn.execute("DELETE FROM favor_status")
+    conn.commit()
+    conn.close()
+
+
+def open_favors() -> list[dict]:
+    open_items = []
+    for favor in load_favors():
+        status = get_favor_status(favor["id"])
+        if status in {"available", "asked"}:
+            open_items.append({**favor, "status": status})
+    return open_items
+
+
+def _favor_conditions_met(favor: dict, npc_id: str) -> bool:
+    from core.clock import get_clock
+
+    if favor.get("requested_by") != npc_id:
+        return False
+    cond = favor.get("conditions") or {}
+    rel = get_relationship(npc_id)
+    clock = get_clock()
+    if int(rel.get("trust") or 0) < int(cond.get("trust_min") or 0):
+        return False
+    if int(rel.get("respect") or 0) < int(cond.get("respect_min") or 0):
+        return False
+    if int(clock.get("week") or 0) < int(cond.get("week_min") or 0):
+        return False
+    if cond.get("weekday") and cond["weekday"] != clock.get("weekday"):
+        return False
+    secret_id = cond.get("secret")
+    if secret_id:
+        needed = cond.get("secret_min") or "known"
+        if _STATE_RANK.get(secret_state(secret_id), 0) < _STATE_RANK.get(needed, 0):
+            return False
+    return True
+
+
+def unlock_and_ask_favors(npc_id: str) -> list[dict]:
+    """Mark matching favors asked at most once, then return those this NPC should voice."""
+    voiced = []
+    for favor in load_favors():
+        if favor.get("requested_by") != npc_id:
+            continue
+        status = get_favor_status(favor["id"])
+        if status in {"succeeded", "failed"}:
+            continue
+        if status == "asked":
+            voiced.append({**favor, "status": status})
+            continue
+        if _favor_conditions_met(favor, npc_id):
+            set_favor_status(favor["id"], "asked")
+            voiced.append({**favor, "status": "asked"})
+    return voiced
+
+
+def format_favor_hooks(npc_id: str) -> str:
+    voiced = unlock_and_ask_favors(npc_id)
+    if not voiced:
+        return ""
+    lines = ["=== FAVOR HOOK (authored; do not invent a new quest) ==="]
+    for favor in voiced:
+        lines.append(f"- {favor['title']}: {favor['ask']}")
+        lines.append('  If they agree, set favor_update to "succeeded". If they refuse, set "failed".')
+    return "\n".join(lines)
+
+
+def resolve_favors(npc_id: str, result: dict | None = None) -> list[str]:
+    result = result or {}
+    haystack = " ".join([
+        str(result.get("memory_note") or ""),
+        str(result.get("reply") or ""),
+        " ".join(result.get("shareable_facts") or []),
+        str(result.get("user_message") or ""),
+    ]).lower()
+    explicit = str(result.get("favor_update") or "").strip().lower()
+    changed = []
+    for favor in load_favors():
+        if favor.get("requested_by") != npc_id:
+            continue
+        if get_favor_status(favor["id"]) != "asked":
+            continue
+        outcome = ""
+        if explicit in {"succeeded", "failed"}:
+            outcome = explicit
+        elif any(keyword in haystack for keyword in favor.get("fail_keywords") or []):
+            outcome = "failed"
+        elif any(keyword in haystack for keyword in favor.get("success_keywords") or []):
+            outcome = "succeeded"
+        if not outcome:
+            continue
+        _apply_favor_outcome(favor, outcome)
+        changed.append(f"{favor['id']}:{outcome}")
+    return changed
+
+
+def _apply_favor_outcome(favor: dict, outcome: str) -> None:
+    payload = favor.get("success") if outcome == "succeeded" else favor.get("fail")
+    payload = payload or {}
+    set_favor_status(favor["id"], outcome)
+    if payload.get("flag"):
+        set_flag(payload["flag"], outcome)
+    for npc_id, deltas in (payload.get("relationship") or {}).items():
+        update_relationship(npc_id, deltas)
+    save_memory(
+        favor["requested_by"],
+        f"Favor {outcome}: {favor.get('title')}",
+        importance=8,
+        tags=f"favor,{outcome}",
+        kind="favor",
     )

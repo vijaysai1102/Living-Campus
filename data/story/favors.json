@@ -1,0 +1,55 @@
+{
+  "favors": [
+    {
+      "id": "kevin_no_2am",
+      "requested_by": "ta",
+      "title": "Stop the 2am emails",
+      "ask": "Ask the student once, in character, to stop emailing you at 2am this week. You will still help during posted hours.",
+      "conditions": {"trust_min": 40, "week_min": 6},
+      "success_keywords": ["stop email", "won't email", "will not email", "i promise", "office hours"],
+      "fail_keywords": ["email you tonight", "2am anyway"],
+      "success": {
+        "flag": "favor.kevin_no_2am",
+        "relationship": {"ta": {"trust": 6, "respect": 4}}
+      },
+      "fail": {
+        "flag": "favor.kevin_no_2am",
+        "relationship": {"ta": {"trust": -6, "hostility": 4}}
+      }
+    },
+    {
+      "id": "batman_dont_tell",
+      "requested_by": "friend",
+      "title": "Don't tell about the Instagram",
+      "ask": "If this student knows you run @CSHallwayDrama, ask them once not to tell anyone. Priya is still the decoy.",
+      "conditions": {"trust_min": 60, "week_min": 6, "secret": "batman_instagram", "secret_min": "known"},
+      "success_keywords": ["won't tell", "i won't say", "secret is safe", "not gonna snitch"],
+      "fail_keywords": ["i'll post", "telling webb", "telling kevin"],
+      "success": {
+        "flag": "favor.batman_dont_tell",
+        "relationship": {"friend": {"trust": 8, "friendship": 6}}
+      },
+      "fail": {
+        "flag": "favor.batman_dont_tell",
+        "relationship": {"friend": {"trust": -10, "hostility": 8}}
+      }
+    },
+    {
+      "id": "webb_bbq",
+      "requested_by": "professor",
+      "title": "Attend the faculty BBQ",
+      "ask": "Mention the Friday faculty BBQ once. You notice who attends. Do not beg. Imply it is professional.",
+      "conditions": {"respect_min": 30, "week_min": 6},
+      "success_keywords": ["i'll go", "see you there", "i will attend", "bbq"],
+      "fail_keywords": ["can't make it", "skip the bbq", "not going"],
+      "success": {
+        "flag": "favor.webb_bbq",
+        "relationship": {"professor": {"respect": 6, "trust": 4}}
+      },
+      "fail": {
+        "flag": "favor.webb_bbq",
+        "relationship": {"professor": {"respect": -4}}
+      }
+    }
+  ]
+}

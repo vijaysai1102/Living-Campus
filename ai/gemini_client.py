@@ -84,6 +84,15 @@ def _normalize_promise_status(value) -> str:
     return status if status in {"kept", "broken"} else ""
 
 
+def _normalize_favor_update(value) -> str:
+    status = str(value or "").strip().lower()
+    if status in {"succeeded", "success", "kept"}:
+        return "succeeded"
+    if status in {"failed", "fail", "broken"}:
+        return "failed"
+    return ""
+
+
 def _parse_bool(value, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value
@@ -114,6 +123,7 @@ def _parse_response(raw: str) -> dict:
         "fact_sensitivity": 40,
         "observed_trait": "",
         "promise_status": "",
+        "favor_update": "",
     }
     try:
         data = json.loads(cleaned)
@@ -135,6 +145,7 @@ def _parse_response(raw: str) -> dict:
             "fact_sensitivity": sensitivity,
             "observed_trait": str(data.get("observed_trait") or "").strip(),
             "promise_status": _normalize_promise_status(data.get("promise_status", "")),
+            "favor_update": _normalize_favor_update(data.get("favor_update", "")),
         }
     except (json.JSONDecodeError, ValueError):
         return empty

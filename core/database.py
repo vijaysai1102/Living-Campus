@@ -168,6 +168,13 @@ def init_db():
             key    TEXT PRIMARY KEY,
             value  TEXT NOT NULL DEFAULT ''
         );
+
+        CREATE TABLE IF NOT EXISTS favor_status (
+            favor_id     TEXT PRIMARY KEY,
+            status       TEXT NOT NULL DEFAULT 'locked',
+            asked_tick   INTEGER,
+            updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     """)
 
     # Seed default emotion and relationship rows for each NPC
