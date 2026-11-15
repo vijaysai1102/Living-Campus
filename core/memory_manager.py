@@ -41,6 +41,55 @@ def get_recent_memories(npc_id: str, n: int = 5) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def get_all_memories(npc_id: str) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT content, importance, tags, kind, related_fact_id, created_at
+        FROM memories
+        WHERE npc_id = ?
+        ORDER BY created_at DESC
+        """,
+        (npc_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_relevant_memories(npc_id: str, query: str = "", n: int = 5) -> list[dict]:
+    """Blend importance, recency, and keyword/tag overlap instead of last-N only."""
+    memories = get_all_memories(npc_id)
+    if not memories:
+        return []
+    query_words = {w.lower() for w in query.split() if len(w) > 3}
+
+    ranked = []
+    for index, memory in enumerate(memories):
+        recency = max(0, 8 - index)
+        importance = int(memory.get("importance") or 5)
+        kind_bonus = 3 if memory.get("kind") in {"promise", "secret", "grievance"} else 0
+        haystack = " ".join([
+            memory.get("content") or "",
+            memory.get("tags") or "",
+            memory.get("kind") or "",
+        ]).lower()
+        overlap = sum(2 for word in query_words if word in haystack)
+        ranked.append((importance * 2 + recency + kind_bonus + overlap, index, memory))
+
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    seen = set()
+    selected = []
+    for _, _, memory in ranked:
+        key = memory.get("content")
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(memory)
+        if len(selected) >= n:
+            break
+    return selected
+
+
 def get_memories_by_tags(npc_id: str, tags: list[str], limit: int = 5) -> list[dict]:
     if not tags:
         return get_recent_memories(npc_id, limit)

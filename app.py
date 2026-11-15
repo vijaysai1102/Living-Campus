@@ -1,7 +1,7 @@
 import streamlit as st
 from core.database import init_db
 from core.npc_loader import load_all_npcs, load_npc
-from core.memory_manager import get_recent_memories, save_memory, save_chat_message, load_chat_history
+from core.memory_manager import get_recent_memories, get_relevant_memories, save_memory, save_chat_message, load_chat_history
 from core.emotion_engine import get_emotions, update_emotions
 from core.relationship_engine import get_relationship, update_relationship, increment_interactions
 from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session_campus
@@ -248,7 +248,7 @@ with col_chat:
         # Load context and generate response
         emotions = get_emotions(npc_id)
         relationship = get_relationship(npc_id)
-        memories = get_recent_memories(npc_id, MEMORY_CONTEXT_COUNT)
+        memories = get_relevant_memories(npc_id, query=user_input, n=MEMORY_CONTEXT_COUNT)
         rag_context = retrieve_context(npc_id, user_input, top_k=RAG_TOP_K)
         gossip_text = format_heard_around_campus(npc_id)
         opinions_text = format_opinions_for_prompt(npc_id)

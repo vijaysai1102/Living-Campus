@@ -1,7 +1,7 @@
 from core.npc_loader import load_npc
 from core.emotion_engine import get_emotions
 from core.relationship_engine import get_relationship
-from core.memory_manager import get_recent_memories
+from core.memory_manager import get_relevant_memories
 from core.rag_retriever import retrieve_context
 from core.gossip_engine import format_heard_around_campus
 from core.social_graph import format_opinions_for_prompt
@@ -15,7 +15,7 @@ def generate_opening(npc_id: str) -> str:
     npc = load_npc(npc_id)
     emotions = get_emotions(npc_id)
     relationship = get_relationship(npc_id)
-    memories = get_recent_memories(npc_id, MEMORY_CONTEXT_COUNT)
+    memories = get_relevant_memories(npc_id, query="", n=MEMORY_CONTEXT_COUNT)
     rag_context = retrieve_context(npc_id, query="", top_k=RAG_TOP_K)
     gossip_text = format_heard_around_campus(npc_id)
     opinions_text = format_opinions_for_prompt(npc_id)
