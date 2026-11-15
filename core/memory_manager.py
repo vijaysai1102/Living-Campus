@@ -61,3 +61,23 @@ def load_chat_history(npc_id: str, limit: int = 50) -> list[dict]:
     ).fetchall()
     conn.close()
     return [{"role": r["role"], "content": r["message"]} for r in rows]
+
+
+def clear_memories(npc_id: str | None = None) -> None:
+    conn = get_connection()
+    if npc_id:
+        conn.execute("DELETE FROM memories WHERE npc_id = ?", (npc_id,))
+    else:
+        conn.execute("DELETE FROM memories")
+    conn.commit()
+    conn.close()
+
+
+def clear_chat_history(npc_id: str | None = None) -> None:
+    conn = get_connection()
+    if npc_id:
+        conn.execute("DELETE FROM chat_history WHERE npc_id = ?", (npc_id,))
+    else:
+        conn.execute("DELETE FROM chat_history")
+    conn.commit()
+    conn.close()

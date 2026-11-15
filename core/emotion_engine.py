@@ -36,15 +36,27 @@ def update_emotions(npc_id: str, deltas: dict) -> None:
 
 
 def reset_emotions(npc_id: str, mood: dict) -> None:
+    values = (
+        npc_id,
+        mood.get("happy", 50),
+        mood.get("angry", 0),
+        mood.get("suspicious", 0),
+        mood.get("stressed", 30),
+        mood.get("excited", 40),
+        mood.get("annoyed", 0),
+    )
     conn = get_connection()
     conn.execute("""
-        UPDATE emotions
-        SET happy=?, angry=?, suspicious=?, stressed=?, excited=?, annoyed=?, updated_at=CURRENT_TIMESTAMP
-        WHERE npc_id=?
-    """, (
-        mood.get("happy", 50), mood.get("angry", 0), mood.get("suspicious", 0),
-        mood.get("stressed", 30), mood.get("excited", 40), mood.get("annoyed", 0),
-        npc_id
-    ))
+        INSERT INTO emotions (npc_id, happy, angry, suspicious, stressed, excited, annoyed, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(npc_id) DO UPDATE SET
+            happy=excluded.happy,
+            angry=excluded.angry,
+            suspicious=excluded.suspicious,
+            stressed=excluded.stressed,
+            excited=excluded.excited,
+            annoyed=excluded.annoyed,
+            updated_at=CURRENT_TIMESTAMP
+    """, values)
     conn.commit()
     conn.close()

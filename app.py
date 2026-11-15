@@ -4,6 +4,7 @@ from core.npc_loader import load_all_npcs, load_npc
 from core.memory_manager import get_recent_memories, save_memory, save_chat_message, load_chat_history
 from core.emotion_engine import get_emotions, update_emotions
 from core.relationship_engine import get_relationship, update_relationship, increment_interactions
+from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session_campus
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -103,19 +104,16 @@ with st.sidebar:
     st.caption("💾 Memories persist across sessions")
     st.caption("🎭 Emotions and relationships evolve over time")
 
-    # Reset button
-    if st.session_state.active_npc:
-        with st.expander("⚙️ Options"):
-            if st.button("🔄 Reset this NPC's state", use_container_width=True):
-                from core.npc_loader import load_npc as _load_npc
-                from core.emotion_engine import reset_emotions
-                npc_data = _load_npc(st.session_state.active_npc)
-                reset_emotions(st.session_state.active_npc, npc_data["initial_mood"])
-                if st.session_state.active_npc in st.session_state.chat_histories:
-                    del st.session_state.chat_histories[st.session_state.active_npc]
-                if st.session_state.active_npc in st.session_state.opening_sent:
-                    st.session_state.opening_sent.discard(st.session_state.active_npc)
+    with st.expander("⚙️ Options"):
+        if st.session_state.active_npc:
+            if st.button("🔄 Reset this NPC", use_container_width=True):
+                reset_npc(st.session_state.active_npc)
+                clear_session_npc(st.session_state, st.session_state.active_npc)
                 st.rerun()
+        if st.button("🧹 Reset entire campus", use_container_width=True):
+            reset_campus()
+            clear_session_campus(st.session_state)
+            st.rerun()
 
 # ── Welcome screen ────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "data"
 CAMPUS_CONTEXT_DIR = DATA_DIR / "campus_context"
-DB_PATH = DATA_DIR / "campus.db"
+DB_PATH = Path(os.getenv("LC_DB_PATH", str(DATA_DIR / "campus.db")))
 NPCS_PATH = DATA_DIR / "npcs.json"
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")

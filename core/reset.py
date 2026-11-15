@@ -1,0 +1,37 @@
+"""Honest reset of NPC / campus simulation state."""
+
+from core.emotion_engine import reset_emotions
+from core.memory_manager import clear_chat_history, clear_memories
+from core.npc_loader import load_all_npcs, load_npc
+from core.relationship_engine import reset_relationship
+
+
+def reset_npc(npc_id: str) -> None:
+    """Wipe one NPC's persisted state back to first-meeting defaults."""
+    npc = load_npc(npc_id)
+    reset_emotions(npc_id, npc["initial_mood"])
+    reset_relationship(npc_id)
+    clear_memories(npc_id)
+    clear_chat_history(npc_id)
+
+
+def reset_campus() -> None:
+    """Wipe every NPC so a new semester can start clean."""
+    for npc in load_all_npcs():
+        reset_npc(npc["id"])
+
+
+def clear_session_npc(session_state, npc_id: str) -> None:
+    """Drop Streamlit session leftovers so the next visit regenerates an opening."""
+    histories = session_state.get("chat_histories")
+    if isinstance(histories, dict):
+        histories.pop(npc_id, None)
+    opening_sent = session_state.get("opening_sent")
+    if isinstance(opening_sent, set):
+        opening_sent.discard(npc_id)
+
+
+def clear_session_campus(session_state) -> None:
+    session_state["chat_histories"] = {}
+    session_state["opening_sent"] = set()
+    session_state["active_npc"] = None
