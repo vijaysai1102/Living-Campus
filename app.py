@@ -18,6 +18,8 @@ from ai.opening_message import generate_opening
 from ui.npc_card import render_npc_card
 from ui.meters import render_meters, render_memory_timeline
 from ui.pulse import render_campus_pulse
+from ui.consequences import render_consequences
+from core.consequences import format_consequences, snapshot_relationships
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K, GROQ_API_KEY
 import json, re
 
@@ -81,6 +83,8 @@ if "opening_sent" not in st.session_state:
     st.session_state.opening_sent = set()
 if "last_gossip" not in st.session_state:
     st.session_state.last_gossip = []
+if "consequence_lines" not in st.session_state:
+    st.session_state.consequence_lines = []
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
@@ -110,7 +114,11 @@ with st.sidebar:
         ):
             if st.session_state.active_npc != npc["id"]:
                 if st.session_state.active_npc is not None:
+                    before = snapshot_relationships()
                     st.session_state.last_gossip = advance_and_resolve()
+                    st.session_state.consequence_lines = format_consequences(
+                        before, snapshot_relationships(), st.session_state.last_gossip
+                    )
                 st.session_state.active_npc = npc["id"]
                 st.rerun()
 
@@ -203,6 +211,7 @@ with col_info:
 
 with col_chat:
     st.markdown(f"## Talking to {npc['emoji']} {npc['name']}")
+    render_consequences()
     st.divider()
 
     if npc_id not in st.session_state.chat_histories:
@@ -239,6 +248,7 @@ with col_chat:
     user_input = st.chat_input(f"Message {npc['name']}...")
 
     if user_input:
+        before_rels = snapshot_relationships()
         st.session_state.last_gossip = advance_and_resolve()
 
         # Show user message immediately and persist
@@ -312,7 +322,13 @@ with col_chat:
         observe_trait(npc_id, result.get("observed_trait", ""))
 
         ingest_shareable_facts(npc_id, result)
-        queue_new_gossip()
+        queued = queue_new_gossip()
+        gossip_events = list(st.session_state.last_gossip or []) + [
+            {**event, "queued": True} for event in queued
+        ]
+        st.session_state.consequence_lines = format_consequences(
+            before_rels, snapshot_relationships(), gossip_events
+        )
 
         history.append({"role": "npc", "content": reply})
         save_chat_message(npc_id, "npc", reply)
