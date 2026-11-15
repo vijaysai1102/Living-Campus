@@ -26,6 +26,29 @@ def npc_ids() -> list[str]:
     return [npc["id"] for npc in load_all_npcs()]
 
 
+def heard_text(item: dict) -> str:
+    if int(item.get("hop") or 0) >= 2 and item.get("distorted_text"):
+        return item["distorted_text"]
+    return item.get("fact_text") or ""
+
+
+def format_heard_around_campus(npc_id: str, limit: int = 8) -> str:
+    items = get_knowledge_for_npc(npc_id)[:limit]
+    if not items:
+        return "You have not heard any campus gossip about this student recently."
+    lines = []
+    for item in items:
+        hop = int(item.get("hop") or 0)
+        if hop == 0 and item.get("source_npc_id") == npc_id:
+            how = "the student told you this"
+        elif hop == 0:
+            how = "you know this directly"
+        else:
+            how = "you heard this as a rumor"
+        lines.append(f"- ({how}) {heard_text(item)}")
+    return "\n".join(lines)
+
+
 def distort_text(fact_text: str, hop: int) -> str:
     text = fact_text.strip()
     if hop < 2:

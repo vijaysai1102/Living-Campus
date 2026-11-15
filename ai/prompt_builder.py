@@ -22,6 +22,9 @@ Total Past Interactions: {interactions_count}
 === WHAT YOU REMEMBER ABOUT THIS STUDENT ===
 {memories_text}
 
+=== WHAT YOU'VE HEARD AROUND CAMPUS ===
+{gossip_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -29,6 +32,7 @@ Total Past Interactions: {interactions_count}
 - Stay completely in character as {name} at all times — never break character
 - Let your emotional state color your tone naturally (high anger = terse/sharp, high stress = distracted/snappy, high happy = warmer)
 - Reference memories only when genuinely relevant — don't force it
+- You may reference WHAT YOU'VE HEARD AROUND CAMPUS when it is relevant. Treat rumors as rumors, not proof. NEVER invent campus knowledge that is not listed there. Never mention a "gossip list".
 - Trust shapes warmth: below 30 = guarded/curt, 30-60 = neutral, above 60 = open/warm
 - High hostility (above 50) = cold, dismissive, or passive-aggressive
 - High friendship (above 60) = casual, genuine, maybe shares extras
@@ -78,7 +82,8 @@ def build_prompt(
     memories: list[dict],
     rag_context: list[dict],
     chat_history: list[dict],
-    user_message: str
+    user_message: str,
+    gossip_text: str = "You have not heard any campus gossip about this student recently.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -100,6 +105,7 @@ def build_prompt(
         respect=relationship.get("respect", 30),
         interactions_count=relationship.get("interactions_count", 0),
         memories_text=format_memories(memories),
+        gossip_text=gossip_text,
         context_text=format_context(rag_context),
         history_text=_format_history(chat_history, npc["name"]),
         user_message=user_message
@@ -126,6 +132,9 @@ Hostility: {hostility}/100 | Respect: {respect}/100
 === WHAT YOU REMEMBER ABOUT THIS STUDENT ===
 {memories_text}
 
+=== WHAT YOU'VE HEARD AROUND CAMPUS ===
+{gossip_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -133,6 +142,7 @@ Hostility: {hostility}/100 | Respect: {respect}/100
 A student has just approached you. Write an opening message that:
 - Greets them in your unique voice and character
 - References something specific from the current campus context (a deadline, event, rumor, or announcement)
+- If you have heard something about this student around campus, you MAY allude to it in character. Do not invent knowledge you were not given.
 - Reflects your current emotional state naturally
 - Gives the student a clear hook for what they can talk to you about
 - Feels proactive and alive — NOT a generic greeting
@@ -153,7 +163,8 @@ def build_opening_prompt(
     emotions: dict,
     relationship: dict,
     memories: list[dict],
-    rag_context: list[dict]
+    rag_context: list[dict],
+    gossip_text: str = "You have not heard any campus gossip about this student recently.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -174,5 +185,6 @@ def build_opening_prompt(
         hostility=relationship.get("hostility", 0),
         respect=relationship.get("respect", 30),
         memories_text=format_memories(memories),
+        gossip_text=gossip_text,
         context_text=format_context(rag_context)
     )
