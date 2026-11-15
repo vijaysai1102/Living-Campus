@@ -17,11 +17,39 @@ def _load_all_context() -> list[dict]:
     return items
 
 
-def retrieve_context(npc_id: str, query: str = "", top_k: int = RAG_TOP_K) -> list[dict]:
+def _current_week(clock: dict | None = None) -> int:
+    if clock and clock.get("week") is not None:
+        return int(clock["week"])
+    try:
+        from core.clock import get_clock
+        return int(get_clock()["week"])
+    except Exception:
+        return 6
+
+
+def _due_week(item: dict) -> int | None:
+    raw = item.get("due_week", item.get("week"))
+    if raw is None or raw == "":
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def retrieve_context(npc_id: str, query: str = "", top_k: int = RAG_TOP_K, clock: dict | None = None) -> list[dict]:
     all_items = _load_all_context()
     relevant = [item for item in all_items if npc_id in item.get("npc_relevance", [])]
+    current_week = _current_week(clock)
 
-    if not relevant:
+    live = []
+    for item in relevant:
+        due = _due_week(item)
+        if due is not None and due < current_week:
+            continue
+        live.append(item)
+
+    if not live:
         return []
 
     query_words = set(query.lower().split()) if query else set()
@@ -33,12 +61,13 @@ def retrieve_context(npc_id: str, query: str = "", top_k: int = RAG_TOP_K) -> li
             item.get("description", "")
         ]).lower()
         keyword_score = sum(1 for w in query_words if len(w) > 3 and w in text)
-        # Items with more tag matches to the query score higher
         tag_text = " ".join(item.get("tags", []))
         tag_score = sum(1 for w in query_words if w in tag_text) * 2
-        return keyword_score + tag_score
+        due = _due_week(item)
+        boost = 5 if due in {current_week, current_week + 1} else 0
+        return keyword_score + tag_score + boost
 
-    scored = sorted(relevant, key=score, reverse=True)
+    scored = sorted(live, key=score, reverse=True)
     return scored[:top_k]
 
 

@@ -1,30 +1,47 @@
 {
   "events": [
     {
+      "id": "ev0",
+      "title": "Project 2 Grades Posted",
+      "description": "Project 2 already closed in week 5. Webb posted grades. A few students are still arguing in the hallway.",
+      "week": 5,
+      "due_week": 5,
+      "tags": ["assignments", "class", "grading"],
+      "npc_relevance": ["professor", "ta", "friend"]
+    },
+    {
       "id": "ev1",
       "title": "CS301 Midterm Exam",
-      "description": "Midterm is scheduled for May 15. Covers everything through Graph Algorithms. Worth 40% of final grade. Webb said there will be a 'conceptual surprise' question.",
+      "description": "Midterm is this week (week 6). Covers everything through Graph Algorithms. Worth 40% of final grade. Webb said there will be a 'conceptual surprise' question.",
+      "week": 6,
+      "due_week": 6,
       "tags": ["exams", "class", "assignments"],
       "npc_relevance": ["professor", "ta", "friend"]
     },
     {
       "id": "ev2",
       "title": "Annual Campus Hackathon",
-      "description": "24-hour hackathon on May 20. $500 first prize. Max team of 4. Registration closes May 12. CS building basement is the venue — aka The Dungeon.",
+      "description": "24-hour hackathon next week in The Dungeon. $500 first prize. Max team of 4. Registration closes this week. CS building basement is the venue.",
+      "week": 7,
+      "due_week": 7,
       "tags": ["events", "social", "hackathon"],
       "npc_relevance": ["friend", "professor"]
     },
     {
       "id": "ev3",
       "title": "CS Department Faculty BBQ",
-      "description": "Optional faculty-student BBQ on Friday afternoon. Webb will absolutely notice who attends. Free food though.",
+      "description": "Optional faculty-student BBQ this Friday afternoon (week 6). Webb will absolutely notice who attends. Free food though.",
+      "week": 6,
+      "due_week": 6,
       "tags": ["events", "social", "department"],
       "npc_relevance": ["friend", "professor", "ta"]
     },
     {
       "id": "ev4",
       "title": "Late Night Study Session",
-      "description": "Unofficial all-nighter study session in Lab 204 before the midterm. Priya is organizing it. Kevin said he might bring coffee. Don't tell Webb.",
+      "description": "Unofficial all-nighter study session in Lab 204 before this week's midterm. Priya is organizing it. Kevin said he might bring coffee. Don't tell Webb.",
+      "week": 6,
+      "due_week": 6,
       "tags": ["events", "social", "exams"],
       "npc_relevance": ["friend", "ta"]
     }
