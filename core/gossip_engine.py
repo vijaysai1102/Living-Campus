@@ -107,8 +107,173 @@ def will_share(source_id: str, listener_id: str, fact: dict) -> bool:
     return not keep_secret and sensitivity <= traits["max_sensitivity"]
 
 
+def delay_for(source_id: str, listener_id: str, hop: int) -> int:
+    # Kevin reporting to Webb is slower than hallway gossip.
+    if source_id == "ta" and listener_id == AUTHORITY_NPC:
+        return 2
+    return 1
+
+
+def get_tick() -> int:
+    from core.database import get_connection
+
+    conn = get_connection()
+    row = conn.execute("SELECT tick FROM campus_state WHERE id = 1").fetchone()
+    if row is None:
+        conn.execute("INSERT OR IGNORE INTO campus_state (id, tick) VALUES (1, 0)")
+        conn.commit()
+        conn.close()
+        return 0
+    conn.close()
+    return int(row["tick"])
+
+
+def advance_tick(n: int = 1) -> int:
+    from core.database import get_connection
+
+    conn = get_connection()
+    conn.execute("INSERT OR IGNORE INTO campus_state (id, tick) VALUES (1, 0)")
+    conn.execute("UPDATE campus_state SET tick = tick + ? WHERE id = 1", (n,))
+    conn.commit()
+    tick = conn.execute("SELECT tick FROM campus_state WHERE id = 1").fetchone()["tick"]
+    conn.close()
+    return int(tick)
+
+
+def collect_spreads() -> list[dict]:
+    """One hop of would-share events that are not already known or queued."""
+    spreads = []
+    for fact in list_recent_facts(limit=100):
+        known = {holder[0] for holder in _holders(fact["id"])}
+        pending_to = _pending_listeners(fact["id"])
+        blocked = known | pending_to
+        for source_id, hop in _holders(fact["id"]):
+            for listener_id in npc_ids():
+                if listener_id in blocked:
+                    continue
+                if not will_share(source_id, listener_id, fact):
+                    continue
+                new_hop = hop + 1
+                event = {
+                    "fact_id": fact["id"],
+                    "from": source_id,
+                    "to": listener_id,
+                    "hop": new_hop,
+                    "status": "rumor" if new_hop >= 1 else "known",
+                    "fact_text": fact.get("fact_text", ""),
+                }
+                spreads.append(event)
+                blocked.add(listener_id)
+    return spreads
+
+
+def queue_new_gossip() -> list[dict]:
+    from core.database import get_connection
+
+    tick = get_tick()
+    queued = []
+    conn = get_connection()
+    for event in collect_spreads():
+        due = tick + delay_for(event["from"], event["to"], event["hop"])
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO pending_gossip
+                (fact_id, from_npc_id, to_npc_id, hop, status, due_tick)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (event["fact_id"], event["from"], event["to"], event["hop"], event["status"], due),
+        )
+        queued.append({**event, "due_tick": due})
+    conn.commit()
+    conn.close()
+    return queued
+
+
+def resolve_due_gossip() -> list[dict]:
+    from core.database import get_connection
+
+    tick = get_tick()
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM pending_gossip WHERE due_tick <= ? ORDER BY due_tick, id",
+        (tick,),
+    ).fetchall()
+    delivered = []
+    for row in rows:
+        event = dict(row)
+        grant_knowledge(event["to_npc_id"], event["fact_id"], status=event["status"], hop=event["hop"])
+        if event["hop"] >= 2:
+            from core.social_graph import get_fact
+            fact = get_fact(event["fact_id"])
+            if fact and not fact.get("distorted_text"):
+                _store_distortion(event["fact_id"], distort_text(fact["fact_text"], event["hop"]))
+        conn.execute(
+            """
+            INSERT INTO gossip_log (fact_id, from_npc_id, to_npc_id, hop, tick)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (event["fact_id"], event["from_npc_id"], event["to_npc_id"], event["hop"], tick),
+        )
+        conn.execute("DELETE FROM pending_gossip WHERE id = ?", (event["id"],))
+        delivered.append({
+            "fact_id": event["fact_id"],
+            "from": event["from_npc_id"],
+            "to": event["to_npc_id"],
+            "hop": event["hop"],
+            "status": event["status"],
+            "tick": tick,
+        })
+    conn.commit()
+    conn.close()
+    return delivered
+
+
+def advance_and_resolve() -> list[dict]:
+    """Campus time passes: due rumors land, then new leaks get scheduled."""
+    advance_tick(1)
+    delivered = resolve_due_gossip()
+    queue_new_gossip()
+    return delivered
+
+
+def recent_gossip_log(limit: int = 8) -> list[dict]:
+    from core.database import get_connection
+
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT g.*, f.fact_text, f.distorted_text, f.sensitivity
+        FROM gossip_log g
+        JOIN campus_facts f ON f.id = g.fact_id
+        ORDER BY g.id DESC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def clear_gossip_state(npc_id: str | None = None) -> None:
+    from core.database import get_connection
+
+    conn = get_connection()
+    if npc_id:
+        conn.execute(
+            "DELETE FROM pending_gossip WHERE from_npc_id = ? OR to_npc_id = ?",
+            (npc_id, npc_id),
+        )
+    else:
+        conn.execute("DELETE FROM pending_gossip")
+        conn.execute("DELETE FROM gossip_log")
+        conn.execute("INSERT OR IGNORE INTO campus_state (id, tick) VALUES (1, 0)")
+        conn.execute("UPDATE campus_state SET tick = 0 WHERE id = 1")
+    conn.commit()
+    conn.close()
+
+
 def propagate_facts(source_npc_id: str | None = None) -> list[dict]:
-    """Spread currently known facts to anyone who should hear them now."""
+    """Immediate spread helper for tests and debug. Production uses delayed ticks."""
     facts = list_recent_facts(limit=100)
     if source_npc_id:
         facts = [f for f in facts if f.get("source_npc_id") == source_npc_id or _npc_knows(source_npc_id, f["id"])]
@@ -152,6 +317,18 @@ def _holders(fact_id: int) -> list[tuple[str, int]]:
 
 def _npc_knows(npc_id: str, fact_id: int) -> bool:
     return any(item["fact_id"] == fact_id for item in get_knowledge_for_npc(npc_id))
+
+
+def _pending_listeners(fact_id: int) -> set[str]:
+    from core.database import get_connection
+
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT to_npc_id FROM pending_gossip WHERE fact_id = ?",
+        (fact_id,),
+    ).fetchall()
+    conn.close()
+    return {row["to_npc_id"] for row in rows}
 
 
 def _is_academic_integrity(text: str) -> bool:

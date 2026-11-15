@@ -4,6 +4,7 @@ from core.emotion_engine import reset_emotions
 from core.memory_manager import clear_chat_history, clear_memories
 from core.npc_loader import load_all_npcs, load_npc
 from core.relationship_engine import reset_relationship
+from core.gossip_engine import clear_gossip_state
 from core.social_graph import clear_facts, clear_knowledge, reset_opinions
 
 
@@ -16,6 +17,7 @@ def reset_npc(npc_id: str) -> None:
     clear_chat_history(npc_id)
     clear_knowledge(npc_id)
     reset_opinions(npc_id)
+    clear_gossip_state(npc_id)
 
 
 def reset_campus() -> None:
@@ -24,6 +26,7 @@ def reset_campus() -> None:
         reset_npc(npc["id"])
     clear_facts()
     reset_opinions()
+    clear_gossip_state()
 
 
 def clear_session_npc(session_state, npc_id: str) -> None:
@@ -40,3 +43,4 @@ def clear_session_campus(session_state) -> None:
     session_state["chat_histories"] = {}
     session_state["opening_sent"] = set()
     session_state["active_npc"] = None
+    session_state["last_gossip"] = []

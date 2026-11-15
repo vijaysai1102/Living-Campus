@@ -99,6 +99,34 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_knowledge_npc
             ON npc_knowledge(npc_id, learned_at DESC);
+
+        CREATE TABLE IF NOT EXISTS campus_state (
+            id    INTEGER PRIMARY KEY CHECK (id = 1),
+            tick  INTEGER DEFAULT 0
+        );
+
+        INSERT OR IGNORE INTO campus_state (id, tick) VALUES (1, 0);
+
+        CREATE TABLE IF NOT EXISTS pending_gossip (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            fact_id      INTEGER NOT NULL,
+            from_npc_id  TEXT NOT NULL,
+            to_npc_id    TEXT NOT NULL,
+            hop          INTEGER NOT NULL,
+            status       TEXT NOT NULL,
+            due_tick     INTEGER NOT NULL,
+            UNIQUE(fact_id, to_npc_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS gossip_log (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            fact_id      INTEGER NOT NULL,
+            from_npc_id  TEXT NOT NULL,
+            to_npc_id    TEXT NOT NULL,
+            hop          INTEGER NOT NULL,
+            tick         INTEGER NOT NULL,
+            created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     """)
 
     # Seed default emotion and relationship rows for each NPC

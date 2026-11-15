@@ -6,7 +6,7 @@ from core.emotion_engine import get_emotions, update_emotions
 from core.relationship_engine import get_relationship, update_relationship, increment_interactions
 from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session_campus
 from core.fact_extractor import ingest_shareable_facts
-from core.gossip_engine import format_heard_around_campus, propagate_facts
+from core.gossip_engine import advance_and_resolve, format_heard_around_campus, queue_new_gossip
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -74,6 +74,8 @@ if "chat_histories" not in st.session_state:
     st.session_state.chat_histories = {}
 if "opening_sent" not in st.session_state:
     st.session_state.opening_sent = set()
+if "last_gossip" not in st.session_state:
+    st.session_state.last_gossip = []
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +101,8 @@ with st.sidebar:
             type="primary" if is_active else "secondary"
         ):
             if st.session_state.active_npc != npc["id"]:
+                if st.session_state.active_npc is not None:
+                    st.session_state.last_gossip = advance_and_resolve()
                 st.session_state.active_npc = npc["id"]
                 st.rerun()
 
@@ -202,6 +206,8 @@ with col_chat:
     user_input = st.chat_input(f"Message {npc['name']}...")
 
     if user_input:
+        st.session_state.last_gossip = advance_and_resolve()
+
         # Show user message immediately and persist
         history.append({"role": "user", "content": user_input})
         save_chat_message(npc_id, "user", user_input)
@@ -258,7 +264,7 @@ with col_chat:
             save_memory(npc_id, memory_note, importance=5, tags="")
 
         ingest_shareable_facts(npc_id, result)
-        propagate_facts()
+        queue_new_gossip()
 
         history.append({"role": "npc", "content": reply})
         save_chat_message(npc_id, "npc", reply)
