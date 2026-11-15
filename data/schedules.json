@@ -1,0 +1,72 @@
+{
+  "locations": [
+    "Webb's office",
+    "Lab 204",
+    "The Dungeon",
+    "Quad",
+    "Kevin's cubicle (Room 203)",
+    "lecture hall"
+  ],
+  "schedules": {
+    "professor": [
+      {"weekday": "monday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "monday", "period": "afternoon", "location": "Webb's office", "interruptible": true},
+      {"weekday": "monday", "period": "evening", "location": "Webb's office", "interruptible": false},
+      {"weekday": "tuesday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "tuesday", "period": "afternoon", "location": "Webb's office", "interruptible": true},
+      {"weekday": "tuesday", "period": "evening", "location": "Webb's office", "interruptible": false},
+      {"weekday": "wednesday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "wednesday", "period": "afternoon", "location": "Webb's office", "interruptible": true},
+      {"weekday": "wednesday", "period": "evening", "location": "Webb's office", "interruptible": false},
+      {"weekday": "thursday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "thursday", "period": "afternoon", "location": "Webb's office", "interruptible": true},
+      {"weekday": "thursday", "period": "evening", "location": "Webb's office", "interruptible": false},
+      {"weekday": "friday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "friday", "period": "afternoon", "location": "Quad", "interruptible": true},
+      {"weekday": "friday", "period": "evening", "location": "Webb's office", "interruptible": false}
+    ],
+    "ta": [
+      {"weekday": "monday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "monday", "period": "afternoon", "location": "Kevin's cubicle (Room 203)", "interruptible": true},
+      {"weekday": "monday", "period": "evening", "location": "Lab 204", "interruptible": true},
+      {"weekday": "monday", "period": "night", "location": "Kevin's cubicle (Room 203)", "interruptible": false},
+      {"weekday": "tuesday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "tuesday", "period": "afternoon", "location": "Kevin's cubicle (Room 203)", "interruptible": true},
+      {"weekday": "tuesday", "period": "evening", "location": "Lab 204", "interruptible": true},
+      {"weekday": "tuesday", "period": "night", "location": "Kevin's cubicle (Room 203)", "interruptible": false},
+      {"weekday": "wednesday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "wednesday", "period": "afternoon", "location": "Kevin's cubicle (Room 203)", "interruptible": true},
+      {"weekday": "wednesday", "period": "evening", "location": "Lab 204", "interruptible": true},
+      {"weekday": "wednesday", "period": "night", "location": "Kevin's cubicle (Room 203)", "interruptible": false},
+      {"weekday": "thursday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "thursday", "period": "afternoon", "location": "Kevin's cubicle (Room 203)", "interruptible": true},
+      {"weekday": "thursday", "period": "evening", "location": "Lab 204", "interruptible": true},
+      {"weekday": "thursday", "period": "night", "location": "Kevin's cubicle (Room 203)", "interruptible": false},
+      {"weekday": "friday", "period": "morning", "location": "lecture hall", "interruptible": false},
+      {"weekday": "friday", "period": "afternoon", "location": "Kevin's cubicle (Room 203)", "interruptible": true},
+      {"weekday": "friday", "period": "evening", "location": "Lab 204", "interruptible": false}
+    ],
+    "friend": [
+      {"weekday": "monday", "period": "morning", "location": "lecture hall", "interruptible": true},
+      {"weekday": "monday", "period": "afternoon", "location": "Quad", "interruptible": true},
+      {"weekday": "monday", "period": "evening", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "monday", "period": "night", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "tuesday", "period": "morning", "location": "lecture hall", "interruptible": true},
+      {"weekday": "tuesday", "period": "afternoon", "location": "Quad", "interruptible": true},
+      {"weekday": "tuesday", "period": "evening", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "tuesday", "period": "night", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "wednesday", "period": "morning", "location": "lecture hall", "interruptible": true},
+      {"weekday": "wednesday", "period": "afternoon", "location": "Quad", "interruptible": true},
+      {"weekday": "wednesday", "period": "evening", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "wednesday", "period": "night", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "thursday", "period": "morning", "location": "lecture hall", "interruptible": true},
+      {"weekday": "thursday", "period": "afternoon", "location": "Quad", "interruptible": true},
+      {"weekday": "thursday", "period": "evening", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "thursday", "period": "night", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "friday", "period": "morning", "location": "lecture hall", "interruptible": true},
+      {"weekday": "friday", "period": "afternoon", "location": "Quad", "interruptible": true},
+      {"weekday": "friday", "period": "evening", "location": "The Dungeon", "interruptible": true},
+      {"weekday": "friday", "period": "night", "location": "The Dungeon", "interruptible": true}
+    ]
+  }
+}

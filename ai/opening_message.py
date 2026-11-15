@@ -8,6 +8,7 @@ from core.social_graph import format_opinions_for_prompt
 from core.player import format_player_for_prompt
 from core.traits import format_observed_traits
 from core.clock import format_clock_for_prompt
+from core.schedules import format_location_for_prompt
 from ai.gemini_client import generate_response
 from ai.prompt_builder import build_opening_prompt
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K
@@ -33,6 +34,7 @@ def generate_opening(npc_id: str) -> str:
         player_text=format_player_for_prompt(),
         traits_text=format_observed_traits(npc_id),
         clock_text=format_clock_for_prompt(),
+        location_text=format_location_for_prompt(npc_id),
     )
     result = generate_response(prompt)
     return result.get("reply", f"Hey. What do you want?")

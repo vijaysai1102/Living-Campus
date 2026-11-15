@@ -1,11 +1,18 @@
 import streamlit as st
 from core.traits import get_observed_traits
 from core.promises import get_pending_promises
+from core.schedules import current_slot
 
 
 def render_npc_card(npc: dict) -> None:
     st.markdown(f"## {npc['emoji']} {npc['name']}")
     st.caption(npc["role"])
+    slot = current_slot(npc.get("id", ""))
+    if slot:
+        status = "free to talk" if slot.get("interruptible") else "busy"
+        st.caption(f"📍 {slot['location']} · {status}")
+    else:
+        st.caption("📍 Off campus right now")
     st.divider()
 
     st.markdown("**Personality**")

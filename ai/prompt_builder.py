@@ -40,6 +40,9 @@ Total Past Interactions: {interactions_count}
 === CURRENT TIME ===
 {clock_text}
 
+=== WHERE YOU ARE ===
+{location_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -116,6 +119,7 @@ def build_prompt(
     traits_text: str = "You have not yet formed a distinct impression of this student.",
     promises_text: str = "This student has no open promises with you.",
     clock_text: str = "It is Thursday afternoon, week 6 of the semester.",
+    location_text: str = "You are somewhere on campus.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -144,6 +148,7 @@ def build_prompt(
         opinions_text=opinions_text,
         context_text=format_context(rag_context),
         clock_text=clock_text,
+        location_text=location_text,
         history_text=_format_history(chat_history, npc["name"]),
         user_message=user_message
     )
@@ -184,6 +189,9 @@ Hostility: {hostility}/100 | Respect: {respect}/100
 === CURRENT TIME ===
 {clock_text}
 
+=== WHERE YOU ARE ===
+{location_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -218,6 +226,7 @@ def build_opening_prompt(
     player_text: str = "This student has not given you a name yet.",
     traits_text: str = "You have not yet formed a distinct impression of this student.",
     clock_text: str = "It is Thursday afternoon, week 6 of the semester.",
+    location_text: str = "You are somewhere on campus.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -244,4 +253,5 @@ def build_opening_prompt(
         opinions_text=opinions_text,
         context_text=format_context(rag_context),
         clock_text=clock_text,
+        location_text=location_text,
     )
