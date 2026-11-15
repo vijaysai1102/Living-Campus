@@ -51,3 +51,4 @@ def clear_session_campus(session_state) -> None:
     session_state["active_npc"] = None
     session_state["last_gossip"] = []
     session_state["consequence_lines"] = []
+    session_state["selected_location"] = None
