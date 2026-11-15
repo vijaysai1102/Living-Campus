@@ -16,6 +16,43 @@ _REL_META = {
     "respect":    ("🎖️",  "#8b5cf6"),
 }
 
+KIND_META = {
+    "fact":      ("fact", "📝", "#64748b"),
+    "promise":   ("promise", "🤝", "#22c55e"),
+    "secret":    ("secret", "🔒", "#c084fc"),
+    "grievance": ("grievance", "💢", "#f43f5e"),
+    "favor":     ("favor", "🙏", "#38bdf8"),
+}
+TIMELINE_FILTERS = ("all", "promise", "secret", "grievance")
+
+
+def filter_timeline_memories(memories: list[dict], kind: str = "all") -> list[dict]:
+    if not kind or kind == "all":
+        return list(memories)
+    return [m for m in memories if (m.get("kind") or "fact") == kind]
+
+
+def format_timeline_entry(memory: dict) -> dict:
+    kind = (memory.get("kind") or "fact").lower()
+    label, emoji, color = KIND_META.get(kind, KIND_META["fact"])
+    importance = int(memory.get("importance") or 5)
+    ts = memory.get("created_at") or ""
+    if "T" in ts:
+        ts = ts.replace("T", " ")[:16]
+    elif " " in ts:
+        ts = ts[:16]
+    return {
+        "kind": kind,
+        "badge": label,
+        "emoji": emoji,
+        "color": color,
+        "star": importance >= 7,
+        "lock": kind == "secret",
+        "timestamp": ts,
+        "content": memory.get("content") or "",
+        "importance": importance,
+    }
+
 
 def _bar(label: str, emoji: str, value: int, color: str) -> None:
     st.markdown(
@@ -55,19 +92,31 @@ def render_memory_timeline(memories: list[dict]) -> None:
         if not memories:
             st.caption("No memories yet. Start talking!")
             return
-        for m in reversed(memories):  # oldest first
-            ts = m.get("created_at", "")
-            # Trim timestamp to readable format
-            if "T" in ts:
-                ts = ts.replace("T", " ")[:16]
-            elif " " in ts:
-                ts = ts[:16]
-            importance = m.get("importance", 5)
-            star = "⭐" if importance >= 7 else "📝"
+        kind_filter = st.radio(
+            "Memory kind",
+            list(TIMELINE_FILTERS),
+            horizontal=True,
+            label_visibility="collapsed",
+            key="memory_kind_filter",
+        )
+        visible = filter_timeline_memories(memories, kind_filter)
+        if not visible:
+            st.caption(f"No {kind_filter} memories yet.")
+            return
+        for memory in reversed(visible):
+            entry = format_timeline_entry(memory)
+            star = "⭐" if entry["star"] else entry["emoji"]
+            badge_bg = "#3b0764" if entry["lock"] else "#1e293b"
             st.markdown(
-                f'<div style="border-left:2px solid #334155;padding:4px 8px;margin-bottom:6px">'
-                f'<div style="font-size:0.7rem;color:#64748b">{star} {ts}</div>'
-                f'<div style="font-size:0.82rem">{m["content"]}</div>'
+                f'<div style="border-left:3px solid {entry["color"]};padding:4px 8px;margin-bottom:6px;'
+                f'background:{"#2e1064" if entry["lock"] else "transparent"}">'
+                f'<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:6px;align-items:center">'
+                f'{star} {entry["timestamp"]}'
+                f'<span style="background:{badge_bg};color:{entry["color"]};padding:1px 6px;'
+                f'border-radius:8px;font-size:0.65rem">{entry["emoji"]} {entry["badge"]}</span>'
+                f'</div>'
+                f'<div style="font-size:0.82rem;color:{"#e9d5ff" if entry["lock"] else "inherit"}">'
+                f'{entry["content"]}</div>'
                 f'</div>',
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
