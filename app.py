@@ -8,6 +8,7 @@ from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session
 from core.fact_extractor import ingest_shareable_facts
 from core.gossip_engine import advance_and_resolve, format_heard_around_campus, queue_new_gossip
 from core.social_graph import format_opinions_for_prompt
+from core.player import format_player_for_prompt, get_player, save_player, player_label
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -84,6 +85,9 @@ if "last_gossip" not in st.session_state:
 with st.sidebar:
     st.markdown("# 🎓 Living Campus")
     st.caption("Westbrook University — AI NPC World")
+    player = get_player()
+    if player.get("introduced"):
+        st.caption(f"You are **{player_label(player)}**")
     st.divider()
 
     if not GROQ_API_KEY:
@@ -132,6 +136,28 @@ if not st.session_state.active_npc:
     st.markdown("# Welcome to Westbrook University 🎓")
     st.markdown("*A Living Campus powered by AI*")
     st.divider()
+
+    player = get_player()
+    with st.form("player_identity"):
+        st.markdown("### Who are you?")
+        name = st.text_input("Your name", value=player.get("display_name") if player.get("introduced") else "")
+        year = st.selectbox(
+            "Year",
+            ["first-year", "sophomore", "junior", "senior"],
+            index=["first-year", "sophomore", "junior", "senior"].index(player.get("year", "junior"))
+            if player.get("year") in ["first-year", "sophomore", "junior", "senior"] else 2,
+        )
+        submitted = st.form_submit_button("That's me", use_container_width=True)
+        if submitted:
+            if not name.strip():
+                st.warning("Give them a name to call you. Batman will nickname you anyway.")
+            else:
+                save_player(name, year)
+                st.rerun()
+
+    if not player.get("introduced"):
+        st.info("Introduce yourself before you wander campus. NPCs will use your name.")
+        st.stop()
 
     st.markdown("### Meet the people on campus")
     cols = st.columns(3)
@@ -237,6 +263,7 @@ with col_chat:
             user_message=user_input,
             gossip_text=gossip_text,
             opinions_text=opinions_text,
+            player_text=format_player_for_prompt(),
         )
 
         with st.chat_message("assistant", avatar=npc["emoji"]):

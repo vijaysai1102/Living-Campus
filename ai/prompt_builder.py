@@ -14,6 +14,9 @@ Background: {context}
 Happy: {happy}/100 | Angry: {angry}/100 | Suspicious: {suspicious}/100
 Stressed: {stressed}/100 | Excited: {excited}/100 | Annoyed: {annoyed}/100
 
+=== THE STUDENT ===
+{player_text}
+
 === YOUR RELATIONSHIP WITH THIS STUDENT ===
 Trust: {trust}/100 | Friendship: {friendship}/100
 Hostility: {hostility}/100 | Respect: {respect}/100
@@ -42,6 +45,7 @@ Total Past Interactions: {interactions_count}
 - High friendship (above 60) = casual, genuine, maybe shares extras
 - Keep responses 2-5 sentences unless the topic truly needs more
 - NEVER mention you are an AI or break the fourth wall
+- Use the student's name when it feels natural. Do not overuse it.
 - Update relationship_delta when this exchange actually changes how you feel about the student:
   insults/lies raise hostility and lower trust; genuine effort raises respect; warmth and reliability raise friendship and trust. Leave axes at 0 if nothing meaningful changed.
 - Extract shareable_facts only for things another person on campus might later hear: confessions, lies, academic dishonesty, insults about other NPCs, promises, personal secrets. Small talk gets an empty list.
@@ -89,6 +93,7 @@ def build_prompt(
     user_message: str,
     gossip_text: str = "You have not heard any campus gossip about this student recently.",
     opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
+    player_text: str = "This student has not given you a name yet.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -109,6 +114,7 @@ def build_prompt(
         hostility=relationship.get("hostility", 0),
         respect=relationship.get("respect", 30),
         interactions_count=relationship.get("interactions_count", 0),
+        player_text=player_text,
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
         opinions_text=opinions_text,
@@ -130,6 +136,9 @@ Background: {context}
 === YOUR CURRENT EMOTIONAL STATE ===
 Happy: {happy}/100 | Angry: {angry}/100 | Suspicious: {suspicious}/100
 Stressed: {stressed}/100 | Excited: {excited}/100 | Annoyed: {annoyed}/100
+
+=== THE STUDENT ===
+{player_text}
 
 === YOUR RELATIONSHIP WITH THIS STUDENT ===
 Trust: {trust}/100 | Friendship: {friendship}/100
@@ -175,6 +184,7 @@ def build_opening_prompt(
     rag_context: list[dict],
     gossip_text: str = "You have not heard any campus gossip about this student recently.",
     opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
+    player_text: str = "This student has not given you a name yet.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -194,6 +204,7 @@ def build_opening_prompt(
         friendship=relationship.get("friendship", 30),
         hostility=relationship.get("hostility", 0),
         respect=relationship.get("respect", 30),
+        player_text=player_text,
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
         opinions_text=opinions_text,

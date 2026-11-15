@@ -5,6 +5,7 @@ from core.memory_manager import get_recent_memories
 from core.rag_retriever import retrieve_context
 from core.gossip_engine import format_heard_around_campus
 from core.social_graph import format_opinions_for_prompt
+from core.player import format_player_for_prompt
 from ai.gemini_client import generate_response
 from ai.prompt_builder import build_opening_prompt
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K
@@ -27,6 +28,7 @@ def generate_opening(npc_id: str) -> str:
         rag_context,
         gossip_text=gossip_text,
         opinions_text=opinions_text,
+        player_text=format_player_for_prompt(),
     )
     result = generate_response(prompt)
     return result.get("reply", f"Hey. What do you want?")

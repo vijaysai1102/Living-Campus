@@ -127,6 +127,17 @@ def init_db():
             tick         INTEGER NOT NULL,
             created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS players (
+            id            INTEGER PRIMARY KEY CHECK (id = 1),
+            display_name  TEXT DEFAULT 'Student',
+            year          TEXT DEFAULT 'junior',
+            notes         TEXT DEFAULT '',
+            introduced    INTEGER DEFAULT 0
+        );
+
+        INSERT OR IGNORE INTO players (id, display_name, year, introduced)
+        VALUES (1, 'Student', 'junior', 0);
     """)
 
     # Seed default emotion and relationship rows for each NPC
