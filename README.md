@@ -8,15 +8,17 @@ Built with Streamlit, Groq (Qwen 3.8 27B), and SQLite — every NPC has a persis
 
 ## What Is This?
 
-Living Campus is a conversational AI simulation set at **Westbrook University**. You play as a student navigating campus life by chatting with three unique AI-powered NPCs. Unlike a standard chatbot, these characters:
+Living Campus is a conversational AI simulation set at **Westbrook University**. You play as a student navigating midterm week by chatting with three unique AI-powered NPCs. Unlike a standard chatbot, these characters:
 
-- **Remember** what you've said to them across sessions
-- **Feel emotions** that shift based on how you treat them
+- **Remember** what you've said to them across sessions, including promises, secrets, and grievances
+- **Feel emotions** that shift based on how you treat them — and on the campus clock
 - **Track your relationship** — trust, friendship, hostility, and respect evolve over time
-- **Know what's happening on campus** — exams, events, rumors, and deadlines through a RAG system
-- **Open conversations proactively** — each NPC greets you with a context-aware message, not a generic "Hello"
+- **Gossip** — what you tell one person can travel, with a delay, so you can still outrun the grapevine
+- **Keep a schedule** — Webb lectures in the morning; miss Kevin's hours and you get a hallway wave
+- **Carry authored story** — Instagram identity, favors, and four campus arcs live in JSON, not invented quests
+- **Know what's happening on campus** — exams, events, rumors, and deadlines through time-aware RAG
 
-The entire state is persisted in a local SQLite database, so every conversation builds on the last.
+The entire state is persisted in a local SQLite database, so every conversation builds on the last. Time is simulated: tick 0 is **Week 6, Thursday afternoon**.
 
 ---
 
@@ -61,7 +63,16 @@ Every NPC tracks **4 relationship axes** with the student, also scored 0–100:
 | Hostility | Above 50 = cold, dismissive, passive-aggressive |
 | Respect | Shapes how seriously the NPC takes your input |
 
-Relationships drift passively over time — every 5 interactions, trust and respect tick up slightly. They also change based on what you say.
+Relationships drift passively over time — every 5 interactions, trust and respect tick up slightly. They also change based on what you say. Big swings (≥5 on an axis) and gossip movement show up as toasts.
+
+### Gossip & Campus Pulse
+Facts you share can hop from NPC to NPC on a delay. Batman leaks more readily than Webb. Kevin may report academic integrity issues — slowly enough that you can reach him first. The **Campus Pulse** shows hallway noise, not a god log of who reported whom.
+
+### Campus Clock & Map
+Each chat or walk spends one period (`morning | afternoon | evening | night`). Four periods make a weekday; weekends are skipped. NPCs live in `data/schedules.json`. The map strip is the primary way to find who is where; the sidebar list is a fallback. Skip-day produces a **While you were away** digest from gossip and due-soon deadlines.
+
+### Story, Favors, Journal, Endings
+Authored content lives in `data/story/`. Batman runs `@CSHallwayDrama`; Priya is the decoy. You can learn that in play. Kevin, Batman, and Webb each ask one favor when conditions pass. The journal lists open favors, known secrets, and upcoming deadlines. Finals week (week 12, or week 11 Friday night) recaps real flags, then **Start a new semester** resets campus and keeps your name.
 
 ### RAG Context (Campus Knowledge Base)
 NPCs don't live in a vacuum. A lightweight keyword-based retrieval system pulls relevant campus context into every prompt from a structured JSON knowledge base:
@@ -123,13 +134,21 @@ AI_NPC_Agent/
 │   ├── database.py               # SQLite connection + schema initialization
 │   ├── npc_loader.py             # Loads NPC profiles from npcs.json
 │   ├── memory_manager.py         # Save/retrieve memories + chat history
-│   ├── emotion_engine.py         # Read/write/reset NPC emotions
+│   ├── emotion_engine.py         # Read/write/reset NPC emotions + schedule mood
 │   ├── relationship_engine.py    # Read/write relationship axes + interaction counter
-│   └── rag_retriever.py          # Keyword-based context retrieval from campus JSON files
+│   ├── rag_retriever.py          # Time-aware context retrieval from campus JSON files
+│   ├── gossip_engine.py          # Delayed rumor mill (no extra LLM calls)
+│   ├── clock.py                  # Simulated week / weekday / period from tick
+│   ├── schedules.py              # Who is where, and whether they can talk
+│   └── story_engine.py           # Flags, secrets, favors, arcs, endings
 │
 ├── ui/
-│   ├── npc_card.py               # NPC profile card sidebar component
-│   └── meters.py                 # Emotion bars, relationship bars, memory timeline
+│   ├── npc_card.py               # NPC profile card
+│   ├── meters.py                 # Emotion bars, relationship bars, memory timeline
+│   ├── pulse.py                  # Campus Pulse
+│   ├── clock.py                  # Clock + leave/skip-day
+│   ├── map.py                    # Campus map strip
+│   └── journal.py                # Player journal
 │
 ├── config/
 │   └── settings.py               # Env vars, file paths, tunable constants
@@ -137,8 +156,10 @@ AI_NPC_Agent/
 ├── data/
 │   ├── npcs.json                 # NPC definitions (personality, traits, initial mood)
 │   ├── campus.db                 # SQLite database — auto-created on first run (gitignored)
+│   ├── schedules.json            # NPC locations by weekday and period
+│   ├── story/                    # Secrets, favors, arcs, playtest thresholds
 │   └── campus_context/
-│       ├── events.json           # Campus events and exams
+│       ├── events.json           # Campus events and exams (week / due_week)
 │       ├── assignments.json      # Active coursework and deadlines
 │       ├── rumors.json           # Campus gossip
 │       ├── announcements.json    # Official notices
@@ -201,24 +222,20 @@ The SQLite database (`data/campus.db`) is created automatically on first run. No
 User types a message
         │
         ▼
-retrieve_context()     ← keyword-matches campus JSON against the message
-get_recent_memories()  ← top 5 memories for this NPC from SQLite
-get_emotions()         ← live emotion state from SQLite
-get_relationship()     ← live relationship axes from SQLite
+advance_and_resolve()  ← one period passes; due gossip and promises resolve
+retrieve_context()     ← time-aware campus JSON (hides expired due_week)
+get_relevant_memories()← importance + recency + overlap, not last-N only
+mood_for_prompt()      ← schedule modifiers, not written back
         │
         ▼
-build_prompt()         ← assembles everything into a single system prompt
+build_prompt()         ← identity, clock, location, gossip, hooks, player
         │
         ▼
-generate_response()    ← sends to Groq (Qwen 3.8 27B), gets back JSON
+generate_response()    ← Groq JSON: reply, deltas, memory, facts, traits, promises
         │
-        ├── reply          → displayed in chat
-        ├── emotion_delta  → update_emotions() clamps and saves to SQLite
-        └── memory_note    → save_memory() saves to SQLite if non-empty
-                │
-                ▼
-        increment_interactions()
-        passive relationship drift every 5 interactions
+        ├── apply deltas, save memory, observe traits, track promises/favors
+        ├── ingest_shareable_facts() then queue_new_gossip()
+        └── consequence toast if an axis moved ≥5 or someone might talk
 ```
 
 ---
