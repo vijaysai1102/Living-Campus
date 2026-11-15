@@ -1,0 +1,52 @@
+{
+  "opinions": [
+    {
+      "npc_id": "professor",
+      "other_npc_id": "ta",
+      "trust": 72,
+      "respect": 68,
+      "irritation": 18,
+      "note": "Kevin is a competent TA who grades too late at night and lets students eat too much of his time."
+    },
+    {
+      "npc_id": "professor",
+      "other_npc_id": "friend",
+      "trust": 24,
+      "respect": 22,
+      "irritation": 42,
+      "note": "That junior with the ridiculous nickname is loud, unserious, and somehow always near drama."
+    },
+    {
+      "npc_id": "ta",
+      "other_npc_id": "professor",
+      "trust": 48,
+      "respect": 82,
+      "irritation": 44,
+      "note": "Webb is brilliant and terrifying. Kevin needs the stipend and the recommendation."
+    },
+    {
+      "npc_id": "ta",
+      "other_npc_id": "friend",
+      "trust": 40,
+      "respect": 28,
+      "irritation": 32,
+      "note": "Batman is funny until he turns a grading week into hallway content."
+    },
+    {
+      "npc_id": "friend",
+      "other_npc_id": "professor",
+      "trust": 22,
+      "respect": 74,
+      "irritation": 16,
+      "note": "Webb is scary in a legendary way. Great for posts, bad for office hours."
+    },
+    {
+      "npc_id": "friend",
+      "other_npc_id": "ta",
+      "trust": 64,
+      "respect": 46,
+      "irritation": 12,
+      "note": "Kevin is exhausted, leaky when sleep-deprived, and the best accidental source on campus."
+    }
+  ]
+}

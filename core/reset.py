@@ -4,6 +4,7 @@ from core.emotion_engine import reset_emotions
 from core.memory_manager import clear_chat_history, clear_memories
 from core.npc_loader import load_all_npcs, load_npc
 from core.relationship_engine import reset_relationship
+from core.social_graph import clear_facts, clear_knowledge, reset_opinions
 
 
 def reset_npc(npc_id: str) -> None:
@@ -13,12 +14,16 @@ def reset_npc(npc_id: str) -> None:
     reset_relationship(npc_id)
     clear_memories(npc_id)
     clear_chat_history(npc_id)
+    clear_knowledge(npc_id)
+    reset_opinions(npc_id)
 
 
 def reset_campus() -> None:
     """Wipe every NPC so a new semester can start clean."""
     for npc in load_all_npcs():
         reset_npc(npc["id"])
+    clear_facts()
+    reset_opinions()
 
 
 def clear_session_npc(session_state, npc_id: str) -> None:

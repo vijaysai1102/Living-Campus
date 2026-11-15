@@ -1,6 +1,6 @@
 import json
 from functools import lru_cache
-from config.settings import NPCS_PATH
+from config.settings import NPCS_PATH, OPINIONS_PATH
 
 
 @lru_cache(maxsize=1)
@@ -18,3 +18,9 @@ def load_npc(npc_id: str) -> dict:
         if npc["id"] == npc_id:
             return npc
     raise ValueError(f"Unknown NPC id: {npc_id}")
+
+
+@lru_cache(maxsize=1)
+def load_opinion_seeds() -> list[dict]:
+    with open(OPINIONS_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)["opinions"]

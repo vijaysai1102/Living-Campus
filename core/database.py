@@ -1,7 +1,7 @@
 import sqlite3
 import json
 from pathlib import Path
-from config.settings import DB_PATH, NPCS_PATH
+from config.settings import DB_PATH, NPCS_PATH, OPINIONS_PATH
 
 
 def get_connection() -> sqlite3.Connection:
@@ -59,6 +59,46 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_chat_npc
             ON chat_history(npc_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS npc_opinions (
+            npc_id        TEXT NOT NULL,
+            other_npc_id  TEXT NOT NULL,
+            trust         INTEGER DEFAULT 50,
+            respect       INTEGER DEFAULT 50,
+            irritation    INTEGER DEFAULT 0,
+            note          TEXT DEFAULT '',
+            updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (npc_id, other_npc_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS campus_facts (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            fact_text       TEXT NOT NULL,
+            source_npc_id   TEXT,
+            about_player    INTEGER DEFAULT 1,
+            about_npc_id    TEXT,
+            sensitivity     INTEGER DEFAULT 40,
+            keep_secret     INTEGER DEFAULT 0,
+            distorted_text  TEXT DEFAULT '',
+            created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+            expires_at      DATETIME
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_facts_created
+            ON campus_facts(created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS npc_knowledge (
+            npc_id      TEXT NOT NULL,
+            fact_id     INTEGER NOT NULL,
+            status      TEXT NOT NULL DEFAULT 'known',
+            hop         INTEGER DEFAULT 0,
+            learned_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (npc_id, fact_id),
+            FOREIGN KEY (fact_id) REFERENCES campus_facts(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_knowledge_npc
+            ON npc_knowledge(npc_id, learned_at DESC);
     """)
 
     # Seed default emotion and relationship rows for each NPC
@@ -79,6 +119,26 @@ def init_db():
             INSERT OR IGNORE INTO relationships (npc_id)
             VALUES (?)
         """, (npc["id"],))
+
+    if OPINIONS_PATH.exists():
+        with open(OPINIONS_PATH, "r", encoding="utf-8") as f:
+            opinions = json.load(f).get("opinions", [])
+        for opinion in opinions:
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO npc_opinions
+                    (npc_id, other_npc_id, trust, respect, irritation, note)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    opinion["npc_id"],
+                    opinion["other_npc_id"],
+                    opinion["trust"],
+                    opinion["respect"],
+                    opinion["irritation"],
+                    opinion.get("note", ""),
+                ),
+            )
 
     conn.commit()
     conn.close()
