@@ -1,0 +1,27 @@
+{
+  "promise_grace_ticks": 3,
+  "consequence_axis_threshold": 5,
+  "instagram": {
+    "min_trust_suspected": 45,
+    "min_trust": 60,
+    "min_trust_known": 70,
+    "week_min": 6
+  },
+  "ending": {
+    "people_pleaser_trust": 55,
+    "webb_rec_respect": 60,
+    "webb_rec_trust": 55,
+    "webb_hostile_trust": 30,
+    "webb_hostile_hostility": 40,
+    "chaos_hostility": 30
+  },
+  "gossip": {
+    "default_delay": 1,
+    "kevin_to_webb_delay": 2
+  },
+  "notes": {
+    "instagram": "Learnable in play by talking to Batman with high trust or when he almost slips. Priya is the decoy.",
+    "gossip": "You can walk to Kevin before Webb hears a ChatGPT confession.",
+    "promises": "A pending promise breaks after 3 ticks — skip-day from Thursday afternoon is enough."
+  }
+}

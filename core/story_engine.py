@@ -3,7 +3,7 @@
 import json
 from functools import lru_cache
 
-from config.settings import ARCS_PATH, FAVORS_PATH, SECRETS_PATH
+from config.settings import ARCS_PATH, FAVORS_PATH, SECRETS_PATH, THRESHOLDS_PATH
 from core.database import get_connection
 from core.memory_manager import save_memory
 from core.relationship_engine import get_relationship, update_relationship
@@ -59,6 +59,14 @@ def secret_state(secret_id: str) -> str:
     return value if value in SECRET_STATES else "unknown"
 
 
+@lru_cache(maxsize=1)
+def load_thresholds() -> dict:
+    if not THRESHOLDS_PATH.exists():
+        return {}
+    with open(THRESHOLDS_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 ENDING_BLURBS = {
     "instagram_exposed": "Batman's Instagram identity leaked. Priya is off the hook; he is not.",
     "instagram_confidant": "You know Batman runs @CSHallwayDrama and you kept it close — or at least you have not blown it up yet.",
@@ -89,15 +97,16 @@ def ending_tags() -> list[str]:
         tags.append("kevin_burned")
     if get_favor_status("webb_bbq") == "succeeded":
         tags.append("webb_bbq")
+    ending = load_thresholds().get("ending") or {}
     webb = get_relationship("professor")
-    if webb.get("respect", 0) >= 60 and webb.get("trust", 0) >= 55:
+    if webb.get("respect", 0) >= int(ending.get("webb_rec_respect", 60)) and webb.get("trust", 0) >= int(ending.get("webb_rec_trust", 55)):
         tags.append("webb_rec_possible")
-    if webb.get("trust", 0) < 30 or webb.get("hostility", 0) >= 40:
+    if webb.get("trust", 0) < int(ending.get("webb_hostile_trust", 30)) or webb.get("hostility", 0) >= int(ending.get("webb_hostile_hostility", 40)):
         tags.append("webb_hostile")
     trusts = [get_relationship(npc["id"]).get("trust", 50) for npc in load_all_npcs()]
-    if trusts and all(t >= 55 for t in trusts):
+    if trusts and all(t >= int(ending.get("people_pleaser_trust", 55)) for t in trusts):
         tags.append("people_pleaser")
-    if any(get_relationship(npc["id"]).get("hostility", 0) >= 30 for npc in load_all_npcs()) or insta == "leaked":
+    if any(get_relationship(npc["id"]).get("hostility", 0) >= int(ending.get("chaos_hostility", 30)) for npc in load_all_npcs()) or insta == "leaked":
         tags.append("chaos_run")
     return tags
 
