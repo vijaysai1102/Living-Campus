@@ -1,0 +1,128 @@
+{
+  "arcs": [
+    {
+      "id": "webb",
+      "title": "Recommendation, MOSS, and the Dean",
+      "npc_ids": ["professor"],
+      "beats": [
+        {
+          "id": "hook",
+          "phase": "hook",
+          "npc_id": "professor",
+          "prompt": "Casually mention that recommendation letters this year require a clean MOSS record. You are not accusing them. You are stating a standard.",
+          "conditions": {"week_min": 6, "respect_min": 30},
+          "keywords": ["recommendation", "moss", "rec letter"]
+        },
+        {
+          "id": "pressure",
+          "phase": "pressure",
+          "npc_id": "professor",
+          "prompt": "Midterm week. You fought the Dean about AI tools. If rumors of ChatGPT on Lab 7 reach you, be colder and mention academic integrity. Do not invent extra scandals.",
+          "conditions": {"week_min": 6},
+          "keywords": ["dean", "integrity", "chatgpt", "midterm"]
+        },
+        {
+          "id": "resolution",
+          "phase": "resolution",
+          "npc_id": "professor",
+          "prompt": "If their trust and respect are both high and you have not treated them as a cheater, hint that a recommendation is still possible after the midterm. If you believe they cheated, close that door without yelling.",
+          "conditions": {"week_min": 6, "trust_min": 40},
+          "keywords": ["recommendation", "after the midterm", "closed"]
+        }
+      ]
+    },
+    {
+      "id": "kevin",
+      "title": "Real help versus dumped work",
+      "npc_ids": ["ta"],
+      "beats": [
+        {
+          "id": "hook",
+          "phase": "hook",
+          "npc_id": "ta",
+          "prompt": "Offer real help on Lab 7 if they stop dumping work on you at 2am. You will not do the assignment for them.",
+          "conditions": {"week_min": 6, "trust_min": 35},
+          "keywords": ["lab 7", "help", "2am"]
+        },
+        {
+          "id": "pressure",
+          "phase": "pressure",
+          "npc_id": "ta",
+          "prompt": "Someone mentioned a Discord study guide. You are terrified Webb will ask. Do not hand them the file. You may admit it looks like last year's exam if they already know.",
+          "conditions": {"week_min": 6},
+          "keywords": ["study guide", "discord", "last year"]
+        },
+        {
+          "id": "resolution",
+          "phase": "resolution",
+          "npc_id": "ta",
+          "prompt": "If they took the real-help path, walk them through one graph edge case and look almost proud. If they used the leak, panic quietly and pull away.",
+          "conditions": {"week_min": 6},
+          "keywords": ["edge case", "autograder", "I can't"]
+        }
+      ]
+    },
+    {
+      "id": "batman",
+      "title": "Instagram identity",
+      "npc_ids": ["friend"],
+      "beats": [
+        {
+          "id": "hook",
+          "phase": "hook",
+          "npc_id": "friend",
+          "prompt": "Almost slip that you run @CSHallwayDrama. Priya is the decoy. Do not name a different admin.",
+          "conditions": {"week_min": 6, "trust_min": 55},
+          "keywords": ["instagram", "cshallwaydrama", "priya"]
+        },
+        {
+          "id": "pressure",
+          "phase": "pressure",
+          "npc_id": "friend",
+          "prompt": "If they know, ask them not to tell. Offer a choice in character: stay quiet, help you post, or you might post them. Do not invent a fourth path.",
+          "conditions": {"week_min": 6, "secret": "batman_instagram", "secret_min": "suspected"},
+          "keywords": ["don't tell", "post you", "join"]
+        },
+        {
+          "id": "resolution",
+          "phase": "resolution",
+          "npc_id": "friend",
+          "prompt": "Resolve the identity: they are in on it, they exposed you, or they became the meme. Stay in one of those three endings. Never invent a new Instagram owner.",
+          "conditions": {"week_min": 6},
+          "keywords": ["we're in this", "exposed", "posted"]
+        }
+      ]
+    },
+    {
+      "id": "campus",
+      "title": "Midterm week and the hackathon",
+      "npc_ids": ["professor", "ta", "friend"],
+      "beats": [
+        {
+          "id": "hook",
+          "phase": "hook",
+          "npc_id": "any",
+          "prompt": "This is midterm week. Mention the CS301 midterm as a live fact, not a flyer from last month.",
+          "conditions": {"week_min": 6, "week_max": 6},
+          "keywords": ["midterm", "week 6"]
+        },
+        {
+          "id": "pressure",
+          "phase": "pressure",
+          "npc_id": "any",
+          "prompt": "Hackathon registration is closing. Batman wants a team. Webb notices who still shows up to class. Kevin is drowning in grading. Do not invent extra events.",
+          "conditions": {"week_min": 6, "week_max": 7},
+          "keywords": ["hackathon", "registration", "dungeon"]
+        },
+        {
+          "id": "resolution",
+          "phase": "resolution",
+          "npc_id": "any",
+          "prompt": "After midterm week, treat the exam as done and the hackathon as next. Comment on whether this student vanished or showed up. No new campus-wide plot.",
+          "conditions": {"week_min": 7},
+          "keywords": ["after the midterm", "hackathon team"]
+        }
+      ]
+    }
+  ]
+}

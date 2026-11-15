@@ -3,7 +3,7 @@
 import json
 from functools import lru_cache
 
-from config.settings import FAVORS_PATH, SECRETS_PATH
+from config.settings import ARCS_PATH, FAVORS_PATH, SECRETS_PATH
 from core.database import get_connection
 from core.memory_manager import save_memory
 from core.relationship_engine import get_relationship, update_relationship
@@ -280,11 +280,95 @@ def format_secret_hooks(npc_id: str) -> str:
 
 
 def format_story_hooks(npc_id: str) -> str:
-    parts = [format_favor_hooks(npc_id), format_secret_hooks(npc_id)]
+    parts = [format_favor_hooks(npc_id), format_secret_hooks(npc_id), format_arc_hooks(npc_id)]
     parts = [part for part in parts if part]
     if not parts:
         return "No authored hook this turn. Do not invent a new quest."
     return "\n\n".join(parts)
+
+
+@lru_cache(maxsize=1)
+def load_arcs() -> list[dict]:
+    if not ARCS_PATH.exists():
+        return []
+    with open(ARCS_PATH, "r", encoding="utf-8") as f:
+        return list(json.load(f).get("arcs", []))
+
+
+def _arc_flag(arc_id: str) -> str:
+    return f"arc.{arc_id}"
+
+
+def _next_beat(arc: dict) -> dict | None:
+    completed = get_flag(_arc_flag(arc["id"]))
+    beats = arc.get("beats") or []
+    if not completed:
+        return beats[0] if beats else None
+    ids = [beat.get("id") for beat in beats]
+    if completed not in ids:
+        return beats[0] if beats else None
+    index = ids.index(completed) + 1
+    if index >= len(beats):
+        return None
+    return beats[index]
+
+
+def _beat_applies(beat: dict, npc_id: str) -> bool:
+    from core.clock import get_clock
+
+    if beat.get("npc_id") not in {npc_id, "any", None}:
+        return False
+    cond = beat.get("conditions") or {}
+    clock = get_clock()
+    week = int(clock.get("week") or 0)
+    if week < int(cond.get("week_min") or 0):
+        return False
+    if cond.get("week_max") is not None and week > int(cond["week_max"]):
+        return False
+    rel = get_relationship(npc_id)
+    if int(rel.get("trust") or 0) < int(cond.get("trust_min") or 0):
+        return False
+    if int(rel.get("respect") or 0) < int(cond.get("respect_min") or 0):
+        return False
+    secret_id = cond.get("secret")
+    if secret_id:
+        needed = cond.get("secret_min") or "known"
+        if _STATE_RANK.get(secret_state(secret_id), 0) < _STATE_RANK.get(needed, 0):
+            return False
+    return True
+
+
+def format_arc_hooks(npc_id: str) -> str:
+    lines = []
+    for arc in load_arcs():
+        beat = _next_beat(arc)
+        if not beat or not _beat_applies(beat, npc_id):
+            continue
+        lines.append(f"- [{arc.get('title')} / {beat.get('phase')}] {beat.get('prompt')}")
+    if not lines:
+        return ""
+    return "=== ARC BEAT (authored; do not invent a new quest) ===\n" + "\n".join(lines)
+
+
+def consider_arcs(npc_id: str, result: dict | None = None) -> list[str]:
+    result = result or {}
+    haystack = " ".join([
+        str(result.get("memory_note") or ""),
+        str(result.get("reply") or ""),
+        str(result.get("user_message") or ""),
+        " ".join(result.get("shareable_facts") or []),
+    ]).lower()
+    advanced = []
+    for arc in load_arcs():
+        beat = _next_beat(arc)
+        if not beat or not _beat_applies(beat, npc_id):
+            continue
+        keywords = [k.lower() for k in beat.get("keywords") or []]
+        if keywords and not any(keyword in haystack for keyword in keywords):
+            continue
+        set_flag(_arc_flag(arc["id"]), beat["id"])
+        advanced.append(f"{arc['id']}:{beat['id']}")
+    return advanced
 
 
 def format_favor_hooks(npc_id: str) -> str:
