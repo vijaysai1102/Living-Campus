@@ -36,6 +36,8 @@ Total Past Interactions: {interactions_count}
 - NEVER mention you are an AI or break the fourth wall
 - Update relationship_delta when this exchange actually changes how you feel about the student:
   insults/lies raise hostility and lower trust; genuine effort raises respect; warmth and reliability raise friendship and trust. Leave axes at 0 if nothing meaningful changed.
+- Extract shareable_facts only for things another person on campus might later hear: confessions, lies, academic dishonesty, insults about other NPCs, promises, personal secrets. Small talk gets an empty list.
+- Set keep_secret true if the student asked you not to tell, you would keep it professionally confidential, or it would be dangerous for them if it leaked.
 
 === RECENT CONVERSATION ===
 {history_text}
@@ -49,10 +51,14 @@ Respond ONLY with valid JSON. No markdown fences. No // comments. No + signs bef
   "reply": "<your in-character response as {name}>",
   "emotion_delta": {{"happy": 0, "angry": 0, "suspicious": 0, "stressed": 0, "excited": 0, "annoyed": 0}},
   "relationship_delta": {{"trust": 0, "friendship": 0, "hostility": 0, "respect": 0}},
-  "memory_note": "<one sentence about this interaction worth remembering, or empty string>"
+  "memory_note": "<one sentence about this interaction worth remembering, or empty string>",
+  "shareable_facts": [],
+  "keep_secret": false,
+  "fact_sensitivity": 40
 }}
 Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change.
-Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change."""
+Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change.
+shareable_facts: 0 to 2 short third-person sentences. keep_secret: true/false. fact_sensitivity: 0-100, higher means more dangerous if leaked."""
 
 
 def _format_history(history: list[dict], npc_name: str) -> str:

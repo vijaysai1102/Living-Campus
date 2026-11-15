@@ -5,6 +5,7 @@ from core.memory_manager import get_recent_memories, save_memory, save_chat_mess
 from core.emotion_engine import get_emotions, update_emotions
 from core.relationship_engine import get_relationship, update_relationship, increment_interactions
 from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session_campus
+from core.fact_extractor import ingest_shareable_facts
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -252,6 +253,8 @@ with col_chat:
 
         if memory_note:
             save_memory(npc_id, memory_note, importance=5, tags="")
+
+        ingest_shareable_facts(npc_id, result)
 
         history.append({"role": "npc", "content": reply})
         save_chat_message(npc_id, "npc", reply)

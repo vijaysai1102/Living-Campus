@@ -50,6 +50,38 @@ def _normalize_delta(raw_delta) -> dict:
     return normalized
 
 
+def _normalize_shareable_facts(raw) -> list[str]:
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        raw = [raw]
+    if not isinstance(raw, list):
+        return []
+    facts = []
+    for item in raw:
+        if isinstance(item, str):
+            text = item.strip()
+        elif isinstance(item, dict):
+            text = str(item.get("text") or item.get("fact") or "").strip()
+        else:
+            continue
+        if text:
+            facts.append(text)
+        if len(facts) >= 2:
+            break
+    return facts
+
+
+def _parse_bool(value, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "1"}
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return default
+
+
 def _parse_response(raw: str) -> dict:
     cleaned = re.sub(r"```json\s*", "", raw)
     cleaned = re.sub(r"```\s*", "", cleaned).strip()
@@ -57,14 +89,30 @@ def _parse_response(raw: str) -> dict:
     cleaned = re.sub(r"//[^\n\"]*", "", cleaned)
     # Fix invalid JSON: +5 → 5 (JSON doesn't allow leading +)
     cleaned = re.sub(r":\s*\+(\d)", r": \1", cleaned)
-    empty = {"reply": raw, "emotion_delta": {}, "relationship_delta": {}, "memory_note": ""}
+    empty = {
+        "reply": raw,
+        "emotion_delta": {},
+        "relationship_delta": {},
+        "memory_note": "",
+        "shareable_facts": [],
+        "keep_secret": False,
+        "fact_sensitivity": 40,
+    }
     try:
         data = json.loads(cleaned)
+        sensitivity = data.get("fact_sensitivity", 40)
+        try:
+            sensitivity = max(0, min(100, int(sensitivity)))
+        except (TypeError, ValueError):
+            sensitivity = 40
         return {
             "reply": data.get("reply", raw),
             "emotion_delta": _normalize_delta(data.get("emotion_delta", {})),
             "relationship_delta": _normalize_delta(data.get("relationship_delta", {})),
-            "memory_note": data.get("memory_note", "") or ""
+            "memory_note": data.get("memory_note", "") or "",
+            "shareable_facts": _normalize_shareable_facts(data.get("shareable_facts", [])),
+            "keep_secret": _parse_bool(data.get("keep_secret", False)),
+            "fact_sensitivity": sensitivity,
         }
     except (json.JSONDecodeError, ValueError):
         return empty
