@@ -26,6 +26,38 @@ def npc_ids() -> list[str]:
     return [npc["id"] for npc in load_all_npcs()]
 
 
+def _npc_name(npc_id: str) -> str:
+    for npc in load_all_npcs():
+        if npc["id"] == npc_id:
+            return npc["name"]
+    return npc_id
+
+
+def player_pulse(limit: int = 5) -> list[str]:
+    """What the student can reasonably know is in the air — not who reported whom."""
+    lines = []
+    seen = set()
+    for fact in list_recent_facts(limit=20):
+        text = (fact.get("fact_text") or "").strip()
+        if not text or text in seen:
+            continue
+        source_id = fact.get("source_npc_id")
+        holders = _holders(fact["id"])
+        hops = [hop for _, hop in holders]
+        leaked = any(hop >= 1 for hop in hops)
+        if source_id:
+            lines.append(f"You told {_npc_name(source_id)}: {text}")
+        if leaked:
+            rumor = fact.get("distorted_text") or "People in CS are repeating a version of that story."
+            if rumor == text:
+                rumor = "A hallway rumor is going around about that."
+            lines.append(rumor)
+        seen.add(text)
+        if len(lines) >= limit:
+            break
+    return lines[:limit]
+
+
 def heard_text(item: dict) -> str:
     if int(item.get("hop") or 0) >= 2 and item.get("distorted_text"):
         return item["distorted_text"]

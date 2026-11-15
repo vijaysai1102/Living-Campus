@@ -13,6 +13,7 @@ from ai.prompt_builder import build_prompt
 from ai.opening_message import generate_opening
 from ui.npc_card import render_npc_card
 from ui.meters import render_meters, render_memory_timeline
+from ui.pulse import render_campus_pulse
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K, GROQ_API_KEY
 import json, re
 
@@ -109,6 +110,9 @@ with st.sidebar:
     st.divider()
     st.caption("💾 Memories persist across sessions")
     st.caption("🎭 Emotions and relationships evolve over time")
+    st.caption("👂 Word travels — other people may hear what you say, but not instantly")
+    st.divider()
+    render_campus_pulse()
 
     with st.expander("⚙️ Options"):
         if st.session_state.active_npc:
