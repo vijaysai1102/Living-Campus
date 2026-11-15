@@ -23,6 +23,7 @@ from ui.pulse import render_campus_pulse
 from ui.consequences import render_consequences
 from ui.clock import render_campus_clock
 from ui.map import render_campus_map
+from ui.digest import render_away_digest
 from core.consequences import format_consequences, snapshot_relationships
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K, GROQ_API_KEY
 import json, re
@@ -174,6 +175,7 @@ if not st.session_state.active_npc:
         st.info("Introduce yourself before you wander campus. NPCs will use your name.")
         st.stop()
 
+    render_away_digest(persistent=True)
     render_campus_map(primary=True)
     st.divider()
     st.markdown("### Meet the people on campus")
@@ -219,6 +221,7 @@ with col_info:
 with col_chat:
     st.markdown(f"## Talking to {npc['emoji']} {npc['name']}")
     st.caption(format_clock())
+    render_away_digest(persistent=False)
     render_consequences()
     st.divider()
 
