@@ -2,6 +2,8 @@ from core.database import get_connection
 from config.settings import STAT_MIN, STAT_MAX
 
 REL_KEYS = ["trust", "friendship", "hostility", "respect"]
+REL_DELTA_MIN = -10
+REL_DELTA_MAX = 10
 DEFAULT_RELATIONSHIP = {
     "trust": 50,
     "friendship": 30,
@@ -21,7 +23,23 @@ def get_relationship(npc_id: str) -> dict:
     return dict(row) if row else {k: 0 for k in REL_KEYS + ["interactions_count"]}
 
 
+def clamp_relationship_delta(deltas: dict) -> dict:
+    clamped = {}
+    for key in REL_KEYS:
+        if key not in deltas:
+            continue
+        try:
+            value = int(deltas[key])
+        except (TypeError, ValueError):
+            continue
+        clamped[key] = max(REL_DELTA_MIN, min(REL_DELTA_MAX, value))
+    return clamped
+
+
 def update_relationship(npc_id: str, deltas: dict) -> None:
+    deltas = clamp_relationship_delta(deltas)
+    if not deltas:
+        return
     current = get_relationship(npc_id)
     updates = {}
     for key in REL_KEYS:

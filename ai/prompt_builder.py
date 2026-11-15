@@ -34,6 +34,8 @@ Total Past Interactions: {interactions_count}
 - High friendship (above 60) = casual, genuine, maybe shares extras
 - Keep responses 2-5 sentences unless the topic truly needs more
 - NEVER mention you are an AI or break the fourth wall
+- Update relationship_delta when this exchange actually changes how you feel about the student:
+  insults/lies raise hostility and lower trust; genuine effort raises respect; warmth and reliability raise friendship and trust. Leave axes at 0 if nothing meaningful changed.
 
 === RECENT CONVERSATION ===
 {history_text}
@@ -46,9 +48,11 @@ Respond ONLY with valid JSON. No markdown fences. No // comments. No + signs bef
 {{
   "reply": "<your in-character response as {name}>",
   "emotion_delta": {{"happy": 0, "angry": 0, "suspicious": 0, "stressed": 0, "excited": 0, "annoyed": 0}},
+  "relationship_delta": {{"trust": 0, "friendship": 0, "hostility": 0, "respect": 0}},
   "memory_note": "<one sentence about this interaction worth remembering, or empty string>"
 }}
-Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change."""
+Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change.
+Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change."""
 
 
 def _format_history(history: list[dict], npc_name: str) -> str:

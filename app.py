@@ -235,10 +235,14 @@ with col_chat:
 
         # Update state
         emotion_delta = result.get("emotion_delta", {})
+        relationship_delta = result.get("relationship_delta", {})
         memory_note = result.get("memory_note", "")
 
         if emotion_delta:
             update_emotions(npc_id, emotion_delta)
+
+        if relationship_delta:
+            update_relationship(npc_id, relationship_delta)
 
         increment_interactions(npc_id)
 

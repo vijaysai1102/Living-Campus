@@ -38,6 +38,18 @@ def generate_response(prompt: str) -> dict:
         raise
 
 
+def _normalize_delta(raw_delta) -> dict:
+    if not isinstance(raw_delta, dict):
+        return {}
+    normalized = {}
+    for key, value in raw_delta.items():
+        try:
+            normalized[str(key).lower()] = int(value)
+        except (TypeError, ValueError):
+            continue
+    return normalized
+
+
 def _parse_response(raw: str) -> dict:
     cleaned = re.sub(r"```json\s*", "", raw)
     cleaned = re.sub(r"```\s*", "", cleaned).strip()
@@ -45,18 +57,17 @@ def _parse_response(raw: str) -> dict:
     cleaned = re.sub(r"//[^\n\"]*", "", cleaned)
     # Fix invalid JSON: +5 → 5 (JSON doesn't allow leading +)
     cleaned = re.sub(r":\s*\+(\d)", r": \1", cleaned)
+    empty = {"reply": raw, "emotion_delta": {}, "relationship_delta": {}, "memory_note": ""}
     try:
         data = json.loads(cleaned)
-        # Lowercase emotion_delta keys in case model capitalizes them
-        raw_delta = data.get("emotion_delta", {})
-        delta = {k.lower(): v for k, v in raw_delta.items()}
         return {
             "reply": data.get("reply", raw),
-            "emotion_delta": delta,
-            "memory_note": data.get("memory_note", "")
+            "emotion_delta": _normalize_delta(data.get("emotion_delta", {})),
+            "relationship_delta": _normalize_delta(data.get("relationship_delta", {})),
+            "memory_note": data.get("memory_note", "") or ""
         }
     except (json.JSONDecodeError, ValueError):
-        return {"reply": raw, "emotion_delta": {}, "memory_note": ""}
+        return empty
 
 
 def ping() -> str:
