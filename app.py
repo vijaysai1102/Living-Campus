@@ -2,7 +2,7 @@ import streamlit as st
 from core.database import init_db
 from core.npc_loader import load_all_npcs, load_npc
 from core.memory_manager import get_recent_memories, get_relevant_memories, save_memory, save_chat_message, load_chat_history
-from core.emotion_engine import get_emotions, update_emotions
+from core.emotion_engine import get_emotions, mood_caption, mood_for_prompt, update_emotions
 from core.relationship_engine import get_relationship, update_relationship, increment_interactions
 from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session_campus
 from core.fact_extractor import ingest_shareable_facts
@@ -208,7 +208,7 @@ with col_info:
     relationship = get_relationship(npc_id)
     memories_for_timeline = get_recent_memories(npc_id, n=20)
     render_npc_card(npc)
-    render_meters(emotions, relationship)
+    render_meters(emotions, relationship, mood_note=mood_caption(npc_id))
     render_memory_timeline(memories_for_timeline)
 
 # ── Left panel: Chat ──────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ with col_chat:
             st.write(user_input)
 
         # Load context and generate response
-        emotions = get_emotions(npc_id)
+        emotions = mood_for_prompt(npc_id, get_emotions(npc_id))
         relationship = get_relationship(npc_id)
         memories = get_relevant_memories(npc_id, query=user_input, n=MEMORY_CONTEXT_COUNT)
         rag_context = retrieve_context(npc_id, user_input, top_k=RAG_TOP_K)

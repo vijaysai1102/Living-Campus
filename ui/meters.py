@@ -70,8 +70,10 @@ def _bar(label: str, emoji: str, value: int, color: str) -> None:
     )
 
 
-def render_meters(emotions: dict, relationship: dict) -> None:
+def render_meters(emotions: dict, relationship: dict, mood_note: str = "") -> None:
     st.markdown("**Emotional State**")
+    if mood_note:
+        st.caption(mood_note)
     for key, (emoji, color) in _EMOTION_META.items():
         val = emotions.get(key, 0)
         _bar(key, emoji, val, color)

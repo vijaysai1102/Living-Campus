@@ -35,6 +35,49 @@ def update_emotions(npc_id: str, deltas: dict) -> None:
     conn.close()
 
 
+def mood_for_prompt(npc_id: str, emotions: dict, clock: dict | None = None) -> dict:
+    """Temporary schedule modifiers for the prompt only — never written back."""
+    from core.clock import get_clock
+
+    clock = clock or get_clock()
+    mood = {key: int(emotions.get(key, 0) or 0) for key in EMOTION_KEYS}
+    week = int(clock.get("week") or 6)
+    weekday = clock.get("weekday") or "thursday"
+    period = clock.get("period") or "afternoon"
+
+    if npc_id == "ta" and (period in {"evening", "night"} or weekday in {"thursday", "friday"} or week >= 6):
+        mood["stressed"] += 15
+        mood["annoyed"] += 8
+        mood["happy"] -= 5
+    if npc_id == "friend" and weekday == "friday" and period == "evening":
+        mood["excited"] += 20
+        mood["happy"] += 10
+    if npc_id == "professor" and week >= 6:
+        mood["annoyed"] += 12
+        mood["stressed"] += 8
+        mood["happy"] -= 4
+
+    for key in EMOTION_KEYS:
+        mood[key] = max(STAT_MIN, min(STAT_MAX, mood[key]))
+    return mood
+
+
+def mood_caption(npc_id: str, clock: dict | None = None) -> str:
+    from core.clock import get_clock
+
+    clock = clock or get_clock()
+    weekday = clock.get("weekday")
+    period = clock.get("period")
+    week = int(clock.get("week") or 6)
+    if npc_id == "ta" and (period in {"evening", "night"} or weekday in {"thursday", "friday"} or week >= 6):
+        return "Grading is sitting on him. Stress is up for this period."
+    if npc_id == "friend" and weekday == "friday" and period == "evening":
+        return "Friday evening in The Dungeon. He's buzzing."
+    if npc_id == "professor" and week >= 6:
+        return "Midterm week. His patience is thinner than usual."
+    return ""
+
+
 def reset_emotions(npc_id: str, mood: dict) -> None:
     values = (
         npc_id,
