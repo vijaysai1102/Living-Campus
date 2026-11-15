@@ -59,6 +59,39 @@ def secret_state(secret_id: str) -> str:
     return value if value in SECRET_STATES else "unknown"
 
 
+def journal_data() -> dict:
+    from core.clock import get_clock
+    from core.rag_retriever import retrieve_context
+
+    clock = get_clock()
+    week = int(clock.get("week") or 6)
+    secrets = []
+    for secret in load_secrets():
+        state = secret_state(secret["id"])
+        if state == "unknown":
+            continue
+        secrets.append({
+            "title": secret.get("title"),
+            "state": state,
+            "hint": secret.get("player_hint") if state == "suspected" else secret.get("summary"),
+        })
+    deadlines = []
+    seen = set()
+    for npc_id in ("professor", "ta", "friend"):
+        for item in retrieve_context(npc_id, query="deadline midterm exam", clock=clock, top_k=5):
+            title = item.get("title") or ""
+            due = item.get("due_week")
+            if title and title not in seen and due in {week, week + 1}:
+                seen.add(title)
+                deadlines.append({"title": title, "due_week": due})
+    return {
+        "favors": open_favors(),
+        "secrets": secrets,
+        "deadlines": deadlines,
+        "clock": clock,
+    }
+
+
 def known_secrets() -> list[dict]:
     found = []
     for secret in load_secrets():

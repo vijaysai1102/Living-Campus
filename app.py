@@ -25,6 +25,7 @@ from ui.consequences import render_consequences
 from ui.clock import render_campus_clock
 from ui.map import render_campus_map
 from ui.digest import render_away_digest
+from ui.journal import render_journal
 from core.consequences import format_consequences, snapshot_relationships
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K, GROQ_API_KEY
 import json, re
@@ -135,6 +136,7 @@ with st.sidebar:
     st.caption("👂 Word travels — other people may hear what you say, but not instantly")
     st.divider()
     render_campus_pulse()
+    render_journal()
 
     with st.expander("⚙️ Options"):
         if st.session_state.active_npc:
