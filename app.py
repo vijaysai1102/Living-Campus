@@ -295,7 +295,13 @@ with col_chat:
             update_relationship(npc_id, {"trust": 2, "respect": 1})
 
         if memory_note:
-            save_memory(npc_id, memory_note, importance=5, tags="")
+            save_memory(
+                npc_id,
+                memory_note,
+                importance=result.get("memory_importance", 5),
+                tags=result.get("memory_tags", "") or "",
+                kind=result.get("memory_kind", "fact"),
+            )
 
         ingest_shareable_facts(npc_id, result)
         queue_new_gossip()

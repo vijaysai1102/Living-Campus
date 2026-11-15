@@ -17,12 +17,14 @@ def init_db():
 
     cursor.executescript("""
         CREATE TABLE IF NOT EXISTS memories (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            npc_id      TEXT NOT NULL,
-            content     TEXT NOT NULL,
-            importance  INTEGER DEFAULT 5,
-            tags        TEXT DEFAULT '',
-            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            npc_id           TEXT NOT NULL,
+            content          TEXT NOT NULL,
+            importance       INTEGER DEFAULT 5,
+            tags             TEXT DEFAULT '',
+            kind             TEXT DEFAULT 'fact',
+            related_fact_id  INTEGER,
+            created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE INDEX IF NOT EXISTS idx_memories_npc
@@ -179,5 +181,14 @@ def init_db():
                 ),
             )
 
+    _ensure_column(cursor, "memories", "kind", "TEXT DEFAULT 'fact'")
+    _ensure_column(cursor, "memories", "related_fact_id", "INTEGER")
+
     conn.commit()
     conn.close()
+
+
+def _ensure_column(cursor: sqlite3.Cursor, table: str, column: str, spec: str) -> None:
+    existing = {row[1] for row in cursor.execute(f"PRAGMA table_info({table})")}
+    if column not in existing:
+        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {spec}")

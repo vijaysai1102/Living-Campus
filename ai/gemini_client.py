@@ -38,6 +38,13 @@ def generate_response(prompt: str) -> dict:
         raise
 
 
+def _safe_int(value, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _normalize_delta(raw_delta) -> dict:
     if not isinstance(raw_delta, dict):
         return {}
@@ -94,6 +101,9 @@ def _parse_response(raw: str) -> dict:
         "emotion_delta": {},
         "relationship_delta": {},
         "memory_note": "",
+        "memory_kind": "fact",
+        "memory_importance": 5,
+        "memory_tags": "",
         "shareable_facts": [],
         "keep_secret": False,
         "fact_sensitivity": 40,
@@ -110,6 +120,9 @@ def _parse_response(raw: str) -> dict:
             "emotion_delta": _normalize_delta(data.get("emotion_delta", {})),
             "relationship_delta": _normalize_delta(data.get("relationship_delta", {})),
             "memory_note": data.get("memory_note", "") or "",
+            "memory_kind": str(data.get("memory_kind") or "fact").lower().strip(),
+            "memory_importance": _safe_int(data.get("memory_importance", 5), 5),
+            "memory_tags": data.get("memory_tags", "") or "",
             "shareable_facts": _normalize_shareable_facts(data.get("shareable_facts", [])),
             "keep_secret": _parse_bool(data.get("keep_secret", False)),
             "fact_sensitivity": sensitivity,

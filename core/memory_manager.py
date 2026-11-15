@@ -1,11 +1,25 @@
 from core.database import get_connection
 
+MEMORY_KINDS = ("fact", "promise", "secret", "grievance", "favor")
 
-def save_memory(npc_id: str, content: str, importance: int = 5, tags: str = "") -> None:
+
+def save_memory(
+    npc_id: str,
+    content: str,
+    importance: int = 5,
+    tags: str = "",
+    kind: str = "fact",
+    related_fact_id: int | None = None,
+) -> None:
+    kind = kind if kind in MEMORY_KINDS else "fact"
+    importance = max(1, min(10, int(importance or 5)))
     conn = get_connection()
     conn.execute(
-        "INSERT INTO memories (npc_id, content, importance, tags) VALUES (?, ?, ?, ?)",
-        (npc_id, content, importance, tags)
+        """
+        INSERT INTO memories (npc_id, content, importance, tags, kind, related_fact_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (npc_id, content, importance, tags, kind, related_fact_id),
     )
     conn.commit()
     conn.close()
@@ -14,8 +28,14 @@ def save_memory(npc_id: str, content: str, importance: int = 5, tags: str = "") 
 def get_recent_memories(npc_id: str, n: int = 5) -> list[dict]:
     conn = get_connection()
     rows = conn.execute(
-        "SELECT content, importance, created_at FROM memories WHERE npc_id = ? ORDER BY created_at DESC LIMIT ?",
-        (npc_id, n)
+        """
+        SELECT content, importance, tags, kind, related_fact_id, created_at
+        FROM memories
+        WHERE npc_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+        """,
+        (npc_id, n),
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -28,7 +48,7 @@ def get_memories_by_tags(npc_id: str, tags: list[str], limit: int = 5) -> list[d
     tag_filters = " OR ".join(["tags LIKE ?" for _ in tags])
     params = [npc_id] + [f"%{t}%" for t in tags] + [limit]
     rows = conn.execute(
-        f"SELECT content, importance, created_at FROM memories WHERE npc_id = ? AND ({tag_filters}) ORDER BY importance DESC LIMIT ?",
+        f"SELECT content, importance, tags, kind, related_fact_id, created_at FROM memories WHERE npc_id = ? AND ({tag_filters}) ORDER BY importance DESC LIMIT ?",
         params
     ).fetchall()
     conn.close()
@@ -38,7 +58,12 @@ def get_memories_by_tags(npc_id: str, tags: list[str], limit: int = 5) -> list[d
 def format_memories(memories: list[dict]) -> str:
     if not memories:
         return "No prior interactions on record."
-    return "\n".join(f"- {m['content']}" for m in memories)
+    lines = []
+    for m in memories:
+        kind = m.get("kind") or "fact"
+        stars = m.get("importance", 5)
+        lines.append(f"- [{kind} | importance {stars}] {m['content']}")
+    return "\n".join(lines)
 
 
 # ── Chat history persistence ───────────────────────────────────────────────────

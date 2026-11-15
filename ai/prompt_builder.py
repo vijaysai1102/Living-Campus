@@ -64,13 +64,17 @@ Respond ONLY with valid JSON. No markdown fences. No // comments. No + signs bef
   "emotion_delta": {{"happy": 0, "angry": 0, "suspicious": 0, "stressed": 0, "excited": 0, "annoyed": 0}},
   "relationship_delta": {{"trust": 0, "friendship": 0, "hostility": 0, "respect": 0}},
   "memory_note": "<one sentence about this interaction worth remembering, or empty string>",
+  "memory_kind": "fact",
+  "memory_importance": 5,
+  "memory_tags": "",
   "shareable_facts": [],
   "keep_secret": false,
   "fact_sensitivity": 40
 }}
 Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change.
 Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change.
-shareable_facts: 0 to 2 short third-person sentences. keep_secret: true/false. fact_sensitivity: 0-100, higher means more dangerous if leaked."""
+shareable_facts: 0 to 2 short third-person sentences. keep_secret: true/false. fact_sensitivity: 0-100, higher means more dangerous if leaked.
+memory_kind: one of fact, promise, secret, grievance, favor. memory_importance: 1-10. Empty memory_note if nothing is worth keeping."""
 
 
 def _format_history(history: list[dict], npc_name: str) -> str:
