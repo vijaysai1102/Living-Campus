@@ -8,6 +8,7 @@ from core.gossip_engine import clear_gossip_state
 from core.social_graph import clear_facts, clear_knowledge, reset_opinions
 from core.traits import clear_observed_traits
 from core.promises import clear_promises
+from core.clock import reset_clock
 
 
 def reset_npc(npc_id: str) -> None:
@@ -31,6 +32,7 @@ def reset_campus() -> None:
     clear_facts()
     reset_opinions()
     clear_gossip_state()
+    reset_clock()
 
 
 def clear_session_npc(session_state, npc_id: str) -> None:

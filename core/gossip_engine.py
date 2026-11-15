@@ -171,6 +171,8 @@ def advance_tick(n: int = 1) -> int:
     conn.commit()
     tick = conn.execute("SELECT tick FROM campus_state WHERE id = 1").fetchone()["tick"]
     conn.close()
+    from core.clock import sync_clock
+    sync_clock(int(tick))
     return int(tick)
 
 

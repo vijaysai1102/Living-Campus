@@ -19,6 +19,7 @@ from ui.npc_card import render_npc_card
 from ui.meters import render_meters, render_memory_timeline
 from ui.pulse import render_campus_pulse
 from ui.consequences import render_consequences
+from ui.clock import render_campus_clock
 from core.consequences import format_consequences, snapshot_relationships
 from config.settings import MEMORY_CONTEXT_COUNT, RAG_TOP_K, GROQ_API_KEY
 import json, re
@@ -94,6 +95,7 @@ with st.sidebar:
     player = get_player()
     if player.get("introduced"):
         st.caption(f"You are **{player_label(player)}**")
+    render_campus_clock()
     st.divider()
 
     if not GROQ_API_KEY:

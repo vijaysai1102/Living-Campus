@@ -103,8 +103,11 @@ def init_db():
             ON npc_knowledge(npc_id, learned_at DESC);
 
         CREATE TABLE IF NOT EXISTS campus_state (
-            id    INTEGER PRIMARY KEY CHECK (id = 1),
-            tick  INTEGER DEFAULT 0
+            id       INTEGER PRIMARY KEY CHECK (id = 1),
+            tick     INTEGER DEFAULT 0,
+            week     INTEGER DEFAULT 6,
+            weekday  TEXT DEFAULT 'thursday',
+            period   TEXT DEFAULT 'afternoon'
         );
 
         INSERT OR IGNORE INTO campus_state (id, tick) VALUES (1, 0);
@@ -203,6 +206,9 @@ def init_db():
 
     _ensure_column(cursor, "memories", "kind", "TEXT DEFAULT 'fact'")
     _ensure_column(cursor, "memories", "related_fact_id", "INTEGER")
+    _ensure_column(cursor, "campus_state", "week", "INTEGER DEFAULT 6")
+    _ensure_column(cursor, "campus_state", "weekday", "TEXT DEFAULT 'thursday'")
+    _ensure_column(cursor, "campus_state", "period", "TEXT DEFAULT 'afternoon'")
 
     conn.commit()
     conn.close()
