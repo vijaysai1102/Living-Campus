@@ -199,6 +199,9 @@ Hostility: {hostility}/100 | Respect: {respect}/100
 === WHERE YOU ARE ===
 {location_text}
 
+=== STORY HOOKS ===
+{hooks_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -234,6 +237,7 @@ def build_opening_prompt(
     traits_text: str = "You have not yet formed a distinct impression of this student.",
     clock_text: str = "It is Thursday afternoon, week 6 of the semester.",
     location_text: str = "You are somewhere on campus.",
+    hooks_text: str = "No authored hook this turn. Do not invent a new quest.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -261,4 +265,5 @@ def build_opening_prompt(
         context_text=format_context(rag_context),
         clock_text=clock_text,
         location_text=location_text,
+        hooks_text=hooks_text,
     )

@@ -256,6 +256,37 @@ def unlock_and_ask_favors(npc_id: str) -> list[dict]:
     return voiced
 
 
+def format_secret_hooks(npc_id: str) -> str:
+    from core.clock import get_clock
+
+    rel = get_relationship(npc_id)
+    clock = get_clock()
+    lines = []
+    for secret in load_secrets():
+        if secret.get("holder") != npc_id:
+            continue
+        cond = secret.get("discovery_conditions") or {}
+        if int(clock.get("week") or 0) < int(cond.get("week_min") or 0):
+            continue
+        if int(rel.get("trust") or 0) < int(cond.get("min_trust") or 0):
+            continue
+        hook = (secret.get("prompt_hook") or "").strip()
+        if not hook:
+            continue
+        lines.append(f"- {hook} (state: {secret_state(secret['id'])})")
+    if not lines:
+        return ""
+    return "=== SECRET HOOK (authored; do not invent a new quest) ===\n" + "\n".join(lines)
+
+
+def format_story_hooks(npc_id: str) -> str:
+    parts = [format_favor_hooks(npc_id), format_secret_hooks(npc_id)]
+    parts = [part for part in parts if part]
+    if not parts:
+        return "No authored hook this turn. Do not invent a new quest."
+    return "\n\n".join(parts)
+
+
 def format_favor_hooks(npc_id: str) -> str:
     voiced = unlock_and_ask_favors(npc_id)
     if not voiced:
