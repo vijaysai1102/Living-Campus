@@ -34,6 +34,13 @@
       "source": "dept_secretary",
       "tags": ["rumors", "gossip", "department", "drama"],
       "npc_relevance": ["friend", "ta"]
+    },
+    {
+      "id": "r6",
+      "content": "Everyone swears Priya Sharma runs @CSHallwayDrama because the posts are too accurate and she's always in the group chats. Priya denies it a little too fast. The actual admin has never been caught.",
+      "source": "group_chats",
+      "tags": ["rumors", "gossip", "social", "drama"],
+      "npc_relevance": ["friend", "ta"]
     }
   ]
 }

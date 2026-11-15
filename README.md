@@ -25,7 +25,7 @@ The entire state is persisted in a local SQLite database, so every conversation 
 | NPC | Role | Vibe |
 |-----|------|------|
 | 👨‍🏫 **Dr. Marcus Webb** | CS Professor | Strict, sarcastic, formally intelligent. PhD from MIT, 12 published papers. Has failed students without hesitation. |
-| 🦇 **Batman** | Campus Friend / Junior CS Student | Chaotic, meme-fluent, gossip-obsessed. Secretly runs anonymous campus Instagram `@CSHallwayDrama` with 800 followers. Nobody knows it's him. |
+| 🦇 **Batman** | Campus Friend / Junior CS Student | Chaotic, meme-fluent, gossip-obsessed. Secretly runs anonymous campus Instagram `@CSHallwayDrama` with 847 followers. Campus thinks it's Priya. Nobody knows it's him. |
 | 😩 **Kevin Park** | Teaching Assistant | Overworked 2nd-year PhD student. Passive-aggressive but secretly helpful. Has left comments like "Are you serious right now?" on student submissions. |
 
 Each NPC has a distinct **personality**, **speaking style**, **goal**, and **fear** that shapes every response.
