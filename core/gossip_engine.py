@@ -1,8 +1,10 @@
 """Rule-based rumor mill. Simulates who would tell whom — no extra LLM calls."""
 
 from core.npc_loader import load_all_npcs
-from core.relationship_engine import get_relationship
+from core.relationship_engine import get_relationship, update_relationship
 from core.social_graph import (
+    adjust_opinion,
+    get_fact,
     get_knowledge_for_npc,
     get_opinion,
     grant_knowledge,
@@ -234,6 +236,7 @@ def resolve_due_gossip() -> list[dict]:
     for row in rows:
         event = dict(row)
         grant_knowledge(event["to_npc_id"], event["fact_id"], status=event["status"], hop=event["hop"])
+        _apply_heard_about_self(event["to_npc_id"], event["fact_id"], event["from_npc_id"])
         if event["hop"] >= 2:
             from core.social_graph import get_fact
             fact = get_fact(event["fact_id"])
@@ -324,6 +327,7 @@ def propagate_facts(source_npc_id: str | None = None) -> list[dict]:
                 new_hop = hop + 1
                 status = "rumor" if new_hop >= 1 else "known"
                 grant_knowledge(listener_id, fact["id"], status=status, hop=new_hop)
+                _apply_heard_about_self(listener_id, fact["id"], source_id)
                 if new_hop >= 2 and not fact.get("distorted_text"):
                     _store_distortion(fact["id"], distort_text(fact["fact_text"], new_hop))
                 event = {
@@ -336,6 +340,15 @@ def propagate_facts(source_npc_id: str | None = None) -> list[dict]:
                 spread.append(event)
                 holders.append((listener_id, new_hop))
     return spread
+
+
+def _apply_heard_about_self(listener_id: str, fact_id: int, from_npc_id: str) -> None:
+    fact = get_fact(fact_id)
+    if not fact or fact.get("about_npc_id") != listener_id:
+        return
+    update_relationship(listener_id, {"trust": -6, "hostility": 5, "friendship": -4})
+    if from_npc_id:
+        adjust_opinion(listener_id, from_npc_id, trust=-5, irritation=8)
 
 
 def _holders(fact_id: int) -> list[tuple[str, int]]:

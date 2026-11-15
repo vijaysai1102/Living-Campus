@@ -1,6 +1,7 @@
 """Turn model output into campus facts the speaker already knows."""
 
-from core.social_graph import create_fact, grant_knowledge
+from core.relationship_engine import get_relationship
+from core.social_graph import adjust_opinion, create_fact, grant_knowledge, mentioned_npc_id
 
 
 def ingest_shareable_facts(npc_id: str, result: dict) -> list[int]:
@@ -18,13 +19,24 @@ def ingest_shareable_facts(npc_id: str, result: dict) -> list[int]:
 
     fact_ids = []
     for text in texts[:2]:
+        about_npc_id = mentioned_npc_id(text, speaker_id=npc_id)
         fact_id = create_fact(
             fact_text=text,
             source_npc_id=npc_id,
             about_player=True,
+            about_npc_id=about_npc_id,
             sensitivity=sensitivity,
             keep_secret=keep_secret,
         )
         grant_knowledge(npc_id, fact_id, status="known", hop=0)
+        if about_npc_id:
+            friendship = get_relationship(npc_id).get("friendship", 30)
+            side = 1 if friendship >= 40 else 0
+            adjust_opinion(
+                npc_id,
+                about_npc_id,
+                irritation=4 + side,
+                respect=-2,
+            )
         fact_ids.append(fact_id)
     return fact_ids

@@ -69,6 +69,55 @@ def upsert_opinion(
     conn.close()
 
 
+def adjust_opinion(npc_id: str, other_npc_id: str, trust: int = 0, respect: int = 0, irritation: int = 0) -> dict | None:
+    current = get_opinion(npc_id, other_npc_id)
+    if not current:
+        return None
+    updated = {
+        "trust": _clamp(current["trust"] + trust),
+        "respect": _clamp(current["respect"] + respect),
+        "irritation": _clamp(current["irritation"] + irritation),
+        "note": current.get("note", ""),
+    }
+    upsert_opinion(npc_id, other_npc_id, **updated)
+    return get_opinion(npc_id, other_npc_id)
+
+
+def mentioned_npc_id(text: str, speaker_id: str | None = None) -> str | None:
+    lowered = (text or "").lower()
+    aliases = {
+        "professor": ("webb", "professor", "marcus"),
+        "ta": ("kevin", "ta", "park"),
+        "friend": ("batman",),
+    }
+    for npc_id, names in aliases.items():
+        if speaker_id == npc_id:
+            continue
+        if any(name in lowered for name in names):
+            return npc_id
+    return None
+
+
+def format_opinions_for_prompt(npc_id: str) -> str:
+    from core.npc_loader import load_npc
+
+    opinions = list_opinions(npc_id)
+    if not opinions:
+        return "You have no strong recorded opinions about the other people on campus."
+    lines = []
+    for opinion in opinions:
+        try:
+            name = load_npc(opinion["other_npc_id"])["name"]
+        except ValueError:
+            name = opinion["other_npc_id"]
+        note = opinion.get("note") or ""
+        lines.append(
+            f"- {name}: trust {opinion['trust']}/100, respect {opinion['respect']}/100, "
+            f"irritation {opinion['irritation']}/100. {note}"
+        )
+    return "\n".join(lines)
+
+
 def reset_opinions(npc_id: str | None = None) -> None:
     seeds = load_opinion_seeds()
     conn = get_connection()

@@ -25,6 +25,9 @@ Total Past Interactions: {interactions_count}
 === WHAT YOU'VE HEARD AROUND CAMPUS ===
 {gossip_text}
 
+=== HOW YOU FEEL ABOUT OTHER PEOPLE ON CAMPUS ===
+{opinions_text}
+
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
 
@@ -33,6 +36,7 @@ Total Past Interactions: {interactions_count}
 - Let your emotional state color your tone naturally (high anger = terse/sharp, high stress = distracted/snappy, high happy = warmer)
 - Reference memories only when genuinely relevant — don't force it
 - You may reference WHAT YOU'VE HEARD AROUND CAMPUS when it is relevant. Treat rumors as rumors, not proof. NEVER invent campus knowledge that is not listed there. Never mention a "gossip list".
+- Let HOW YOU FEEL ABOUT OTHER PEOPLE color how you talk about them. If you heard this student insulted you behind your back, be colder. If you like the student, you may take their side.
 - Trust shapes warmth: below 30 = guarded/curt, 30-60 = neutral, above 60 = open/warm
 - High hostility (above 50) = cold, dismissive, or passive-aggressive
 - High friendship (above 60) = casual, genuine, maybe shares extras
@@ -84,6 +88,7 @@ def build_prompt(
     chat_history: list[dict],
     user_message: str,
     gossip_text: str = "You have not heard any campus gossip about this student recently.",
+    opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -106,6 +111,7 @@ def build_prompt(
         interactions_count=relationship.get("interactions_count", 0),
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
+        opinions_text=opinions_text,
         context_text=format_context(rag_context),
         history_text=_format_history(chat_history, npc["name"]),
         user_message=user_message
@@ -134,6 +140,9 @@ Hostility: {hostility}/100 | Respect: {respect}/100
 
 === WHAT YOU'VE HEARD AROUND CAMPUS ===
 {gossip_text}
+
+=== HOW YOU FEEL ABOUT OTHER PEOPLE ON CAMPUS ===
+{opinions_text}
 
 === CURRENT CAMPUS CONTEXT ===
 {context_text}
@@ -165,6 +174,7 @@ def build_opening_prompt(
     memories: list[dict],
     rag_context: list[dict],
     gossip_text: str = "You have not heard any campus gossip about this student recently.",
+    opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
 ) -> str:
     return _OPENING_TEMPLATE.format(
         name=npc["name"],
@@ -186,5 +196,6 @@ def build_opening_prompt(
         respect=relationship.get("respect", 30),
         memories_text=format_memories(memories),
         gossip_text=gossip_text,
+        opinions_text=opinions_text,
         context_text=format_context(rag_context)
     )

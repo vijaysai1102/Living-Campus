@@ -7,6 +7,7 @@ from core.relationship_engine import get_relationship, update_relationship, incr
 from core.reset import reset_npc, reset_campus, clear_session_npc, clear_session_campus
 from core.fact_extractor import ingest_shareable_facts
 from core.gossip_engine import advance_and_resolve, format_heard_around_campus, queue_new_gossip
+from core.social_graph import format_opinions_for_prompt
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -224,6 +225,7 @@ with col_chat:
         memories = get_recent_memories(npc_id, MEMORY_CONTEXT_COUNT)
         rag_context = retrieve_context(npc_id, user_input, top_k=RAG_TOP_K)
         gossip_text = format_heard_around_campus(npc_id)
+        opinions_text = format_opinions_for_prompt(npc_id)
 
         prompt = build_prompt(
             npc=npc,
@@ -234,6 +236,7 @@ with col_chat:
             chat_history=history[:-1],  # exclude the message we just appended
             user_message=user_input,
             gossip_text=gossip_text,
+            opinions_text=opinions_text,
         )
 
         with st.chat_message("assistant", avatar=npc["emoji"]):
