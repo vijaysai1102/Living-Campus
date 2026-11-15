@@ -59,6 +59,76 @@ def secret_state(secret_id: str) -> str:
     return value if value in SECRET_STATES else "unknown"
 
 
+ENDING_BLURBS = {
+    "instagram_exposed": "Batman's Instagram identity leaked. Priya is off the hook; he is not.",
+    "instagram_confidant": "You know Batman runs @CSHallwayDrama and you kept it close — or at least you have not blown it up yet.",
+    "kevin_allied": "Kevin actually trusts you not to dump 2am work on him.",
+    "kevin_burned": "Kevin asked you to stop the 2am emails. That did not go well.",
+    "webb_bbq": "You showed up for Webb's world, at least on paper.",
+    "webb_rec_possible": "Webb's respect is high enough that a recommendation is still imaginable.",
+    "webb_hostile": "Webb does not want to write you anything except a warning.",
+    "chaos_run": "You left a trail. People talked. Campus remembers the mess.",
+    "people_pleaser": "You tried to keep everyone reasonably happy. It almost looks like a strategy.",
+}
+
+
+def ending_tags() -> list[str]:
+    from core.npc_loader import load_all_npcs
+    from core.relationship_engine import get_relationship
+
+    tags = []
+    insta = secret_state("batman_instagram")
+    if insta == "leaked":
+        tags.append("instagram_exposed")
+    elif insta in {"known", "suspected"}:
+        tags.append("instagram_confidant")
+    kevin_favor = get_favor_status("kevin_no_2am")
+    if kevin_favor == "succeeded":
+        tags.append("kevin_allied")
+    elif kevin_favor == "failed":
+        tags.append("kevin_burned")
+    if get_favor_status("webb_bbq") == "succeeded":
+        tags.append("webb_bbq")
+    webb = get_relationship("professor")
+    if webb.get("respect", 0) >= 60 and webb.get("trust", 0) >= 55:
+        tags.append("webb_rec_possible")
+    if webb.get("trust", 0) < 30 or webb.get("hostility", 0) >= 40:
+        tags.append("webb_hostile")
+    trusts = [get_relationship(npc["id"]).get("trust", 50) for npc in load_all_npcs()]
+    if trusts and all(t >= 55 for t in trusts):
+        tags.append("people_pleaser")
+    if any(get_relationship(npc["id"]).get("hostility", 0) >= 30 for npc in load_all_npcs()) or insta == "leaked":
+        tags.append("chaos_run")
+    return tags
+
+
+def format_ending_recap() -> str:
+    from core.memory_manager import get_recent_memories
+    from core.npc_loader import load_all_npcs
+    from core.player import player_label
+    from core.relationship_engine import get_relationship
+
+    lines = [
+        f"Finals week. {player_label()} made it to the end of the semester.",
+    ]
+    for tag in ending_tags():
+        blurb = ENDING_BLURBS.get(tag)
+        if blurb:
+            lines.append(blurb)
+    for npc in load_all_npcs():
+        rel = get_relationship(npc["id"])
+        lines.append(
+            f"{npc['name']}: trust {rel['trust']}, friendship {rel['friendship']}, "
+            f"hostility {rel['hostility']}, respect {rel['respect']}."
+        )
+        memories = get_recent_memories(npc["id"], n=2)
+        for memory in memories:
+            kind = memory.get("kind") or "fact"
+            if kind in {"secret", "grievance", "promise", "favor"}:
+                lines.append(f"  They still remember: {memory['content']}")
+    return "\n".join(lines)
+
+
 def journal_data() -> dict:
     from core.clock import get_clock
     from core.rag_retriever import retrieve_context

@@ -26,6 +26,16 @@ def reset_npc(npc_id: str) -> None:
     clear_promises(npc_id)
 
 
+def start_new_semester() -> None:
+    """Wipe the sim but keep the student's name and year."""
+    from core.player import get_player, save_player
+
+    player = get_player()
+    reset_campus()
+    if player.get("introduced"):
+        save_player(player.get("display_name") or "Student", player.get("year") or "junior", player.get("notes") or "")
+
+
 def reset_campus() -> None:
     """Wipe every NPC so a new semester can start clean."""
     for npc in load_all_npcs():
