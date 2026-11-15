@@ -163,6 +163,11 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_promises_npc
             ON promises(npc_id, status, due_tick);
+
+        CREATE TABLE IF NOT EXISTS flags (
+            key    TEXT PRIMARY KEY,
+            value  TEXT NOT NULL DEFAULT ''
+        );
     """)
 
     # Seed default emotion and relationship rows for each NPC

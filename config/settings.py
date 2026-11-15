@@ -11,6 +11,9 @@ DB_PATH = Path(os.getenv("LC_DB_PATH", str(DATA_DIR / "campus.db")))
 NPCS_PATH = DATA_DIR / "npcs.json"
 OPINIONS_PATH = DATA_DIR / "npc_opinions.json"
 SCHEDULES_PATH = DATA_DIR / "schedules.json"
+STORY_DIR = DATA_DIR / "story"
+SECRETS_PATH = STORY_DIR / "secrets.json"
+FAVORS_PATH = STORY_DIR / "favors.json"
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
