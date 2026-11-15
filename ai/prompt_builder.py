@@ -28,6 +28,9 @@ Total Past Interactions: {interactions_count}
 === WHAT YOU REMEMBER ABOUT THIS STUDENT ===
 {memories_text}
 
+=== OPEN PROMISES ===
+{promises_text}
+
 === WHAT YOU'VE HEARD AROUND CAMPUS ===
 {gossip_text}
 
@@ -50,6 +53,7 @@ Total Past Interactions: {interactions_count}
 - NEVER mention you are an AI or break the fourth wall
 - Use the student's name when it feels natural. Do not overuse it.
 - HOW YOU CURRENTLY SEE THIS STUDENT is your private impression. Let it color tone. You may add one new observed_trait adjective this turn if they revealed something, otherwise leave it empty. Webb and Batman can disagree.
+- If they make a commitment, set memory_kind to promise. If they follow through on an OPEN PROMISE, set promise_status to "kept". If they admit they failed or clearly dodge it, set "broken". Leave promise_status empty otherwise.
 - Update relationship_delta when this exchange actually changes how you feel about the student:
   insults/lies raise hostility and lower trust; genuine effort raises respect; warmth and reliability raise friendship and trust. Leave axes at 0 if nothing meaningful changed.
 - Extract shareable_facts only for things another person on campus might later hear: confessions, lies, academic dishonesty, insults about other NPCs, promises, personal secrets. Small talk gets an empty list.
@@ -74,13 +78,15 @@ Respond ONLY with valid JSON. No markdown fences. No // comments. No + signs bef
   "shareable_facts": [],
   "keep_secret": false,
   "fact_sensitivity": 40,
-  "observed_trait": ""
+  "observed_trait": "",
+  "promise_status": ""
 }}
 Emotion delta values: integers between -15 and 15 (no + sign). Lowercase keys only. Only include emotions that actually change.
 Relationship delta values: integers between -10 and 10 (no + sign). Lowercase keys only. Only include axes that actually change.
 shareable_facts: 0 to 2 short third-person sentences. keep_secret: true/false. fact_sensitivity: 0-100, higher means more dangerous if leaked.
 memory_kind: one of fact, promise, secret, grievance, favor. memory_importance: 1-10. Empty memory_note if nothing is worth keeping.
-observed_trait: optional single lowercase adjective (diligent, untrustworthy, chaotic) or empty string. Do not repeat traits you already listed."""
+observed_trait: optional single lowercase adjective (diligent, untrustworthy, chaotic) or empty string. Do not repeat traits you already listed.
+promise_status: empty string, "kept", or "broken" for an existing open promise. Do not set kept just because they made a new promise."""
 
 
 def _format_history(history: list[dict], npc_name: str) -> str:
@@ -105,6 +111,7 @@ def build_prompt(
     opinions_text: str = "You have no strong recorded opinions about the other people on campus.",
     player_text: str = "This student has not given you a name yet.",
     traits_text: str = "You have not yet formed a distinct impression of this student.",
+    promises_text: str = "This student has no open promises with you.",
 ) -> str:
     return _SYSTEM_TEMPLATE.format(
         name=npc["name"],
@@ -128,6 +135,7 @@ def build_prompt(
         player_text=player_text,
         traits_text=traits_text,
         memories_text=format_memories(memories),
+        promises_text=promises_text,
         gossip_text=gossip_text,
         opinions_text=opinions_text,
         context_text=format_context(rag_context),

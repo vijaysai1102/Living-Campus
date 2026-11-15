@@ -79,6 +79,11 @@ def _normalize_shareable_facts(raw) -> list[str]:
     return facts
 
 
+def _normalize_promise_status(value) -> str:
+    status = str(value or "").strip().lower()
+    return status if status in {"kept", "broken"} else ""
+
+
 def _parse_bool(value, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value
@@ -108,6 +113,7 @@ def _parse_response(raw: str) -> dict:
         "keep_secret": False,
         "fact_sensitivity": 40,
         "observed_trait": "",
+        "promise_status": "",
     }
     try:
         data = json.loads(cleaned)
@@ -128,6 +134,7 @@ def _parse_response(raw: str) -> dict:
             "keep_secret": _parse_bool(data.get("keep_secret", False)),
             "fact_sensitivity": sensitivity,
             "observed_trait": str(data.get("observed_trait") or "").strip(),
+            "promise_status": _normalize_promise_status(data.get("promise_status", "")),
         }
     except (json.JSONDecodeError, ValueError):
         return empty

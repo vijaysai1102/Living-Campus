@@ -7,6 +7,7 @@ from core.relationship_engine import reset_relationship
 from core.gossip_engine import clear_gossip_state
 from core.social_graph import clear_facts, clear_knowledge, reset_opinions
 from core.traits import clear_observed_traits
+from core.promises import clear_promises
 
 
 def reset_npc(npc_id: str) -> None:
@@ -20,6 +21,7 @@ def reset_npc(npc_id: str) -> None:
     reset_opinions(npc_id)
     clear_gossip_state(npc_id)
     clear_observed_traits(npc_id)
+    clear_promises(npc_id)
 
 
 def reset_campus() -> None:

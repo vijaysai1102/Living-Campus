@@ -268,6 +268,8 @@ def advance_and_resolve() -> list[dict]:
     advance_tick(1)
     delivered = resolve_due_gossip()
     queue_new_gossip()
+    from core.promises import resolve_overdue_promises
+    resolve_overdue_promises()
     return delivered
 
 

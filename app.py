@@ -10,6 +10,7 @@ from core.gossip_engine import advance_and_resolve, format_heard_around_campus, 
 from core.social_graph import format_opinions_for_prompt
 from core.player import format_player_for_prompt, get_player, save_player, player_label
 from core.traits import format_observed_traits, observe_trait
+from core.promises import format_pending_promises, maybe_track_from_turn
 from core.rag_retriever import retrieve_context
 from ai.gemini_client import generate_response, QuotaExceededError, ModelNotFoundError
 from ai.prompt_builder import build_prompt
@@ -266,6 +267,7 @@ with col_chat:
             opinions_text=opinions_text,
             player_text=format_player_for_prompt(),
             traits_text=format_observed_traits(npc_id),
+            promises_text=format_pending_promises(npc_id),
         )
 
         with st.chat_message("assistant", avatar=npc["emoji"]):
@@ -296,8 +298,9 @@ with col_chat:
         if relationship.get("interactions_count", 0) % 5 == 0:
             update_relationship(npc_id, {"trust": 2, "respect": 1})
 
+        memory_id = None
         if memory_note:
-            save_memory(
+            memory_id = save_memory(
                 npc_id,
                 memory_note,
                 importance=result.get("memory_importance", 5),
@@ -305,6 +308,7 @@ with col_chat:
                 kind=result.get("memory_kind", "fact"),
             )
 
+        maybe_track_from_turn(npc_id, result, memory_id)
         observe_trait(npc_id, result.get("observed_trait", ""))
 
         ingest_shareable_facts(npc_id, result)

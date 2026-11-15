@@ -147,6 +147,19 @@ def init_db():
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(npc_id, trait)
         );
+
+        CREATE TABLE IF NOT EXISTS promises (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            npc_id        TEXT NOT NULL,
+            content       TEXT NOT NULL,
+            status        TEXT NOT NULL DEFAULT 'pending',
+            created_tick  INTEGER NOT NULL DEFAULT 0,
+            due_tick      INTEGER NOT NULL,
+            memory_id     INTEGER
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_promises_npc
+            ON promises(npc_id, status, due_tick);
     """)
 
     # Seed default emotion and relationship rows for each NPC

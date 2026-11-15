@@ -10,19 +10,21 @@ def save_memory(
     tags: str = "",
     kind: str = "fact",
     related_fact_id: int | None = None,
-) -> None:
+) -> int:
     kind = kind if kind in MEMORY_KINDS else "fact"
     importance = max(1, min(10, int(importance or 5)))
     conn = get_connection()
-    conn.execute(
+    cursor = conn.execute(
         """
         INSERT INTO memories (npc_id, content, importance, tags, kind, related_fact_id)
         VALUES (?, ?, ?, ?, ?, ?)
         """,
         (npc_id, content, importance, tags, kind, related_fact_id),
     )
+    memory_id = cursor.lastrowid
     conn.commit()
     conn.close()
+    return int(memory_id or 0)
 
 
 def get_recent_memories(npc_id: str, n: int = 5) -> list[dict]:
